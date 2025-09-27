@@ -1,0 +1,20 @@
+# Core Django
+Django>=5.0,<6.0
+
+# REST framework
+djangorestframework>=3.15.0
+
+# JWT Authentication
+djangorestframework-simplejwt>=5.3.0
+
+# CORS (para frontend Next.js)
+django-cors-headers>=4.3.0
+
+# PostgreSQL driver (si usas Postgres, si no, puedes borrarlo)
+psycopg2-binary>=2.9.9
+
+# Environments (para variables .env, recomendable)
+python-decouple>=3.8
+
+# Opción para documentación automática de APIs
+drf-yasg>=1.21.7
