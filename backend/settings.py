@@ -12,11 +12,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -33,6 +35,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "corsheaders",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,14 +43,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    "rest_framework_simplejwt",
     'core',
+    'usuarios',
     'catalogo',
     'inventario',
     'ventas',
 ]
 
-
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -56,6 +61,19 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    )
+}
+
+# CORS (ajusta dominios en produccion)
+CORS_ALLOW_ALL_ORIGINS = True
+
+# modelo de usuario custom
+AUTH_USER_MODEL = "usuarios.Cuenta"
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -83,14 +101,13 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
   "default": {
     "ENGINE": "django.db.backends.postgresql",
-    "NAME": os.getenv("PG_NAME"),
-    "USER": os.getenv("PG_USER"),
-    "PASSWORD": os.getenv("PG_PASS"),
-    "HOST": os.getenv("PG_HOST","127.0.0.1"),
-    "PORT": os.getenv("PG_PORT","5432"),
+    "NAME": env("PG_NAME"),
+    "USER": env("PG_USER"),
+    "PASSWORD": env("PG_PASS"),
+    "HOST": env("PG_HOST", default="127.0.0.1"),
+    "PORT": env("PG_PORT", default="5432"),
   }
 }
-
 
 # correo de desarrollo: imprime en consola
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
