@@ -14,7 +14,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head></head>
-      <body className={`flex antialiased justify-center !bg-black w-full h-dvh`}>
+      <body className={`flex antialiased justify-center !bg-neutral-950 w-full h-dvh`}>
         {children}
       </body>
     </html>
