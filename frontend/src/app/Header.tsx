@@ -33,7 +33,7 @@ export default function Header() {
     <header className="w-full bg-neutral-800 text-white px-6 py-3 flex items-center justify-between">
       {/* Logo */}
       <a className="text-xl font-bold" href="">
-        Mi App
+        Pro Nano Chile
       </a>
 
       {/* Botón login/register */}

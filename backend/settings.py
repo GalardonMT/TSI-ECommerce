@@ -101,11 +101,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
   "default": {
     "ENGINE": "django.db.backends.postgresql",
-    "NAME": env("PG_NAME"),
-    "USER": env("PG_USER"),
-    "PASSWORD": env("PG_PASS"),
-    "HOST": env("PG_HOST", default="127.0.0.1"),
-    "PORT": env("PG_PORT", default="5432"),
+    "NAME": os.getenv("PG_NAME","ecommerce_db_yrrf"),
+    "USER": os.getenv("PG_USER","ecommerce_db_yrrf_user"),
+    "PASSWORD": os.getenv("PG_PASS","o6BxaJd4DpL2cDZ9J5gXUFiDUkhYMFEf"),
+    "HOST": os.getenv("PG_HOST", default="127.0.0.1"),
+    "PORT": os.getenv("PG_PORT", default="5432"),
   }
 }
 
