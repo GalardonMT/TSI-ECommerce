@@ -1,4 +1,4 @@
-import Header from "./Header";
+import Header from "./home/Header";
 
 // app/page.tsx
 export default function Home() {
