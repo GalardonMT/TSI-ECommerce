@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { text } from "stream/consumers";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -30,7 +31,7 @@ export default function Header() {
   }, [open]);
 
   return (
-    <header className="w-full bg-neutral-800 text-white px-6 py-3 flex items-center justify-between">
+    <header className="w-full bg-neutral-800 text-white px-6 py-3 flex items-center justify-between fixed top-0">
       {/* Logo */}
       <a className="text-xl font-bold" href="">
         Pro Nano Chile
@@ -40,13 +41,15 @@ export default function Header() {
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setOpen(!open)}
-          className="text-white px-4 py-2 font-semibold"
+          className="text-white hover:text-[#FFF374] px-4 py-2 transition-colors"
         >
-          Iniciar sesión
+          <svg width="28" height="28" className="stroke-current" fill="none" strokeWidth="2" >
+            <use xlinkHref="/sprites.svg#icon-user" />
+          </svg>
         </button>
 
         {/* Ventana desplegable */}
-        {open && (
+        {open && ( 
           <div className="absolute right-0 mt-2 w-72 bg-white text-gray-800 rounded-lg shadow-lg p-4 z-50">
             <form className="space-y-3">
               <div>
