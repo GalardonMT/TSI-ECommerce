@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.utils import timezone
+from django.conf import settings
 
 class CuentaManager(BaseUserManager):
     def create_user(self, correo, password=None, **extra_fields):
@@ -53,3 +54,59 @@ class Cuenta(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.correo} ({self.rol})"
+
+class Cliente(models.Model):
+    cuenta = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="cliente"
+    )
+    direccion = models.ForeignKey(
+        "Direccion", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="clientes"
+    )
+    rut = models.CharField(max_length=12, unique=True)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    correo = models.EmailField(blank=True, null=True)  # opcional si ya lo tienes en Cuenta
+    estado = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Cliente: {self.cuenta.nombre} {self.cuenta.apellido_paterno}"
+    
+class Empleado(models.Model):
+    cuenta = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="empleado"
+    )
+    rut = models.CharField(max_length=12, unique=True)
+    nombre = models.CharField(max_length=50)
+    apellido_paterno = models.CharField(max_length=50)
+    apellido_materno = models.CharField(max_length=50, blank=True, null=True)
+    email = models.EmailField(unique=True)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    estado = models.BooleanField(default=True)
+    ultimo_login = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Empleado: {self.nombre} {self.apellido_paterno}"
+    
+class Direccion(models.Model):
+    cuenta = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="direcciones"
+    )
+    calle = models.CharField(max_length=100)
+    numero = models.CharField(max_length=10)
+    region = models.CharField(max_length=50)
+    comuna = models.CharField(max_length=50)
+    numero_departamento = models.CharField(
+        max_length=20, blank=True, null=True,
+        help_text="Depto / Oficina / Otro dato adicional"
+    )
+    codigo_postal = models.CharField(max_length=10, blank=True, null=True)
+    referencia = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.calle} {self.numero}, {self.comuna}, {self.region}"
