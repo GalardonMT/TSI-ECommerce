@@ -2,17 +2,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f2f2f2;
   --foreground: #171717;
   --font-Poppins: "Poppins", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
+/*Temporalmente se va a evitar el modo oscuro*/
+/*@media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
+}*/
 
 @theme {
   --font-Sansation: "Sansation", sans-serif;
