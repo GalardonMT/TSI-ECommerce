@@ -1,21 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="display:none">
+<svg xmlns="http://www.w3.org/2000/svg">
   
   <!-- Icono de usuario -->
-  <symbol id="icon-user" viewBox="0 0 24 24">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-    <circle cx="12" cy="7" r="4"/>
+  <symbol id="icon-user" viewBox="0 0 50 50">
+    <path d="M25 23.8245C28.0388 23.8245 30.9532 22.5695 33.102 20.3355C35.2508 18.1015 36.458 15.0716 36.458 11.9122C36.458 8.75292 35.2508 5.723 33.102 3.48902C30.9532 1.25504 28.0388 0 25 0C21.9612 0 19.0468 1.25504 16.898 3.48902C14.7492 5.723 13.542 8.75292 13.542 11.9122C13.542 15.0716 14.7492 18.1015 16.898 20.3355C19.0468 22.5695 21.9612 23.8245 25 23.8245ZM25 29.0582C9.76591 29.0582 0 37.7983 0 42.0538V50H50V42.0538C50 36.9075 40.7545 29.0582 25 29.0582Z"/>
   </symbol>
 
-<<<<<<< HEAD
   <!-- Icono de carrito -->
-=======
-   <!-- Icono de carrito -->
->>>>>>> main
   <symbol id="icon-cart" viewBox="0 0 24 24">
     <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
     <line x1="3" y1="6" x2="21" y2="6"/>
     <path d="M16 10a4 4 0 0 1-8 0"/>
   </symbol>
 
-</svg>
+  <!-- X icon -->
+  <symbol id="icon-close" viewBox="0 0 24 24">
+    <path d="M18 6L6 18" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M6 6L18 18" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </symbol>
 
+  <!-- Lupa -->
+  <symbol id="icon-search" viewBox="0 0 50 50">
+    <circle cx="20.0987" cy="20.0987" r="18.5987" stroke="white" stroke-width="3"/>
+    <line y1="-1.5" x2="20.3197" y2="-1.5" transform="matrix(0.711303 0.702886 -0.711303 0.702886 33.7883 33.9594)" stroke="white" stroke-width="3"/>
+  </symbol>
+
+  <symbol id="icon-password-eye" viewBox="0 0 30 30">
+    <g opacity="0.5">
+      <path d="M1.25 15C1.25 15 6.25 5 15 5C23.75 5 28.75 15 28.75 15C28.75 15 23.75 25 15 25C6.25 25 1.25 15 1.25 15Z" stroke="#585858" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M15 18.75C17.0711 18.75 18.75 17.0711 18.75 15C18.75 12.9289 17.0711 11.25 15 11.25C12.9289 11.25 11.25 12.9289 11.25 15C11.25 17.0711 12.9289 18.75 15 18.75Z" stroke="#585858" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="icon-password-eye-off" viewBox="0 0 30 30">
+    <g opacity="0.5">
+      <line x1="3" y1="26.981" x2="25.981" y2="4.00004" stroke="#585858" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+</svg>

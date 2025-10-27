@@ -23,7 +23,7 @@ const poppins = Poppins({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body className={"flex flex-col antialiased justify-center w-full h-dvh ${sansation.variable} ${poppins.variable}"}>
+      <body className={`flex flex-col antialiased w-full h-dvh ${sansation.variable} ${poppins.variable}`}>
           <Header/>
         {children}
       </body>
