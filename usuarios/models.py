@@ -1,6 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone 
+
 
 class CuentaManager(BaseUserManager):
     def create_user(self, correo, password=None, **extra_fields):
@@ -54,7 +55,7 @@ class Direccion(models.Model):
     def __str__(self):
         return f"{self.calle} {self.numero}, {self.comuna}, {self.region}"
 
-class Usuario(AbstractUser):
+class Usuario(AbstractBaseUser, PermissionsMixin):
     correo = models.EmailField(unique=True) 
     nombre = models.CharField(max_length=100)
     apellido_paterno = models.CharField(max_length=100, blank=True)
@@ -74,16 +75,20 @@ class Usuario(AbstractUser):
         blank=True,
         db_column='id_direccion'
     )
+    
     # --- Campos requeridos por Django Admin ---
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    
+    # AÑADE ESTE CAMPO (PermissionsMixin lo espera)
+    is_superuser = models.BooleanField(default=False) 
+    
     date_joined = models.DateTimeField(auto_now_add=True)
 
     # --- Configuración ---
-    objects = CuentaManager() # Le decimos que use tu Manager
-
-    USERNAME_FIELD = 'correo' # Le decimos que el login es con 'correo'
-    REQUIRED_FIELDS = ['nombre', 'apellido_paterno'] # Campos pedidos al crear superuser
+    objects = CuentaManager() 
+    USERNAME_FIELD = 'correo'
+    REQUIRED_FIELDS = ['nombre', 'apellido_paterno'] 
 
     class Meta:
         db_table = 'USUARIO'
@@ -91,7 +96,7 @@ class Usuario(AbstractUser):
     def __str__(self):
         return self.correo
         
-    # Propiedades para que el Admin de Django funcione bien
+    # Estas propiedades están perfectas
     @property
     def first_name(self):
         return self.nombre
