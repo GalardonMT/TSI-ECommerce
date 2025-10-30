@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { text } from "stream/consumers";
+import Link from 'next/link';
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -33,9 +34,9 @@ export default function Header() {
   return (
     <header className="w-full bg-neutral-800 text-white px-6 py-3 flex items-center justify-between fixed top-0">
       {/* Logo */}
-      <a className="text-xl font-bold" href="">
+      <Link className="text-xl font-bold" href="/">
         Pro Nano Chile
-      </a>
+      </Link>
 
       {/* Botón login/register */}
       <div className="relative" ref={dropdownRef}>
