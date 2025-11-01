@@ -24,7 +24,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body className={`flex flex-col antialiased w-full h-dvh ${sansation.variable} ${poppins.variable}`}>
-          <Header/>
+        <div className="w-full h-8 content-center bg-black relative shadow-[0px_1px_0px_0px_rgba(255,255,255,0.35)] z-60">
+          <div className="opacity-70 justify-self-center text-zinc-100 text-xl font-bold font-['Poppins']">Envios gratuitos a partir de $20.000 </div>
+        </div>
+        <Header/>
         {children}
       </body>
     </html>

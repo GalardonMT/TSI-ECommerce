@@ -259,7 +259,7 @@ export default function Header() {
       {/* Cart drawer (slides from left) */}
       <div
         ref={cartRef}
-        className={`fixed top-0 right-0 h-full w-80 bg-white z-50 shadow-lg transform transition-transform duration-300 ${cartOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed top-0 right-0 h-full w-80 bg-white z-60 shadow-lg transform transition-transform duration-300 ${cartOpen ? 'translate-x-0' : 'translate-x-full'}`}
         aria-hidden={!cartOpen}
       >
         <div className="p-4 h-full flex flex-col">
