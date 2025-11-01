@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -13,6 +14,7 @@ export default function Header() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchToggleRef = useRef<HTMLButtonElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const router = useRouter();
   const [cartOpen, setCartOpen] = useState(false);
   const cartRef = useRef<HTMLDivElement>(null);
 
@@ -113,9 +115,9 @@ export default function Header() {
 
   <header className={`sticky top-0 z-50 flex w-full h-20 px-12 py-3 justify-center items-center transition-colors duration-200 ${isStuck ? 'bg-transparent' : 'bg-black'} text-white`}>
       {/* Logo */}
-      <a className="text-2xl font-bold tracking-wider font-Sansation" href="">
+      <button className="text-2xl font-bold tracking-wider font-Sansation whitespace-nowrap" onClick={() => router.push('/')}>
         PRO NANO CHILE
-      </a>
+      </button>
       <div className="flex flex-1 flex-row justify-end items-center gap-4">
         {/* Centered Search (slides from top). Keep mounted for smooth close animation */}
         <div
@@ -227,6 +229,7 @@ export default function Header() {
 
                 <button
                   type="button"
+                  onClick={() => router.push('/register')}
                   className="w-full bg-gray-200 text-gray-700 py-2 rounded-md font-semibold hover:bg-gray-300 transition"
                 >
                   Registrarse
