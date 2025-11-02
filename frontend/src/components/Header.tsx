@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [openSearch, setOpenSearch] = useState(false);
-  const [isStuck, setIsStuck] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null); // referencia al contenedor
   const sentinelRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -15,6 +14,9 @@ export default function Header() {
   const searchToggleRef = useRef<HTMLButtonElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const [isStuck, setIsStuck] = useState(() => !isHome);
   const [cartOpen, setCartOpen] = useState(false);
   const cartRef = useRef<HTMLDivElement>(null);
 
@@ -93,6 +95,13 @@ export default function Header() {
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
+
+    // If we're not on the home page, header should always be visible
+    if (!isHome) {
+      setIsStuck(true);
+      return;
+    }
+
     if (!sentinel) return;
 
     const observer = new IntersectionObserver(
@@ -106,14 +115,14 @@ export default function Header() {
     observer.observe(sentinel);
 
     return () => observer.disconnect();
-  }, []);
+  }, [isHome]);
 
   return (
     <>
       {/* sentinel used to detect when the header reaches the top of the viewport */}
       <div ref={sentinelRef} className="w-full h-0" />
 
-  <header className={`sticky top-0 z-50 flex w-full h-20 px-12 py-3 justify-center items-center transition-colors duration-200 ${isStuck ? 'bg-transparent' : 'bg-black'} text-white`}>
+  <header className={`sticky top-0 z-50 flex w-full h-20 px-12 py-3 justify-center items-center transition-colors duration-200 ${isStuck ? 'bg-black' : 'bg-transparent'} text-white`}>
       {/* Logo */}
       <button className="text-2xl font-bold tracking-wider font-Sansation whitespace-nowrap" onClick={() => router.push('/')}>
         PRO NANO CHILE
@@ -169,7 +178,7 @@ export default function Header() {
             className="px-4 py-2"
             aria-label="Abrir búsqueda"
           >
-            <svg className="size-8" viewBox="0 0 50 50">
+            <svg className="size-8" viewBox="0 0 50 50" fill="none">
               <use xlinkHref="/sprites.svg#icon-search" strokeWidth="3" stroke="white"/>
             </svg>
           </button>
