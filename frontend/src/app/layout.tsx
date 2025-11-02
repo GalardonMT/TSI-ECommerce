@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "../components/Header";
+import Footer from "@/components/Footer";
 import { Sansation, Poppins } from "next/font/google";
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
         <Header/>
         {children}
+        <Footer/>
       </body>
     </html>
   );
