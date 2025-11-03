@@ -255,7 +255,7 @@ export default function Header() {
           )}
         </div>
         
-        {/* Botón Carrito de compra: Pendiente de hacer */}
+        {/* Botón Carrito de compra*/}
         <button onClick={() => setCartOpen(true)} className="flex flex-row items-center justify-self-center">
             <div className="px-4 py-2">
               <svg className="size-9" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -289,7 +289,13 @@ export default function Header() {
           </div>
 
           <div className="mt-4">
-            <button className="w-full bg-black text-white py-2 rounded-md">Ir al pago</button>
+            <button 
+            className="w-full bg-black text-white py-2 rounded-md"
+            type="button"
+            onClick={() => router.push("/cart")}
+            >
+              Ir al carrito
+            </button>
           </div>
         </div>
       </div>
