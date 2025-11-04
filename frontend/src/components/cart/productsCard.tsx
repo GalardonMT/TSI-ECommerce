@@ -15,7 +15,8 @@ type Props = {
   onChangeQty: (id: string, qty: number) => void;
 };
 
-// Presentational component that renders a single product row in the cart.
+// Se puede usar este componente para la pagina de productos tambien
+// Tarjeta de producto en el carrito
 export default function ProductCard({ product, onRemove, onChangeQty }: Props) {
   return (
     <div className="flex items-center gap-4 bg-zinc-300">

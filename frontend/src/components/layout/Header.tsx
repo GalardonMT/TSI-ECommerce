@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -124,9 +125,9 @@ export default function Header() {
 
   <header className={`sticky top-0 z-50 flex w-full h-20 px-12 py-3 justify-center items-center transition-colors duration-200 ${isStuck ? 'bg-black' : 'bg-transparent'} text-white`}>
       {/* Logo */}
-      <button className="text-2xl font-bold tracking-wider font-Sansation whitespace-nowrap" onClick={() => router.push('/')}>
+      <Link href="/" className="text-2xl font-bold tracking-wider font-Sansation whitespace-nowrap">
         PRO NANO CHILE
-      </button>
+      </Link>
       <div className="flex flex-1 flex-row justify-end items-center gap-4">
         {/* Centered Search (slides from top). Keep mounted for smooth close animation */}
         <div
@@ -236,13 +237,12 @@ export default function Header() {
                   Iniciar sesión
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => router.push('/register')}
-                  className="w-full bg-gray-200 text-gray-700 py-2 rounded-md font-semibold hover:bg-gray-300 transition"
+                <Link
+                  href="/register"
+                  className="w-full bg-gray-200 text-gray-700 py-2 rounded-md font-semibold hover:bg-gray-300 transition inline-block text-center"
                 >
                   Registrarse
-                </button>
+                </Link>
 
                 <button
                   type="button"
