@@ -1,7 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
-from django.utils import timezone
-from django.conf import settings
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.utils import timezone 
+
 
 class CuentaManager(BaseUserManager):
     def create_user(self, correo, password=None, **extra_fields):
@@ -23,90 +23,102 @@ class CuentaManager(BaseUserManager):
             raise ValueError("Superuser requiere is_superuser=True")
         return self.create_user(correo, password, **extra_fields)
 
-class Cuenta(AbstractBaseUser, PermissionsMixin):
-    # datos basicos
-    correo = models.EmailField(unique=True)
-    nombre = models.CharField(max_length=50)
-    apellido_paterno = models.CharField(max_length=50)
-    apellido_materno = models.CharField(max_length=50, blank=True, null=True)
-    rut = models.CharField(max_length=12, unique=True)
-    fecha_nacimiento = models.DateField(blank=True, null=True)
-    telefono = models.CharField(max_length=20, blank=True, null=True)
+class Rol(models.Model):
+    id_rol = models.AutoField(primary_key=True)
+    nombre_rol = models.CharField(max_length=100)
 
-    # rol
-    class Rol(models.TextChoices):
-        CLIENTE = "cliente", "Cliente"
-        EMPLEADO = "empleado", "Empleado"
-        ADMIN = "admin", "Admin"
-    rol = models.CharField(max_length=20, choices=Rol.choices, default=Rol.CLIENTE)
-
-    # estado y auditoria
-    is_active = models.BooleanField(default=True)   # equivalente a "estado"
-    is_staff = models.BooleanField(default=False)
-    creado_en = models.DateTimeField(default=timezone.now)
-    actualizado_en = models.DateTimeField(auto_now=True)
-    # last_login ya viene en AbstractBaseUser
-
-    USERNAME_FIELD = "correo"
-    REQUIRED_FIELDS = ["nombre", "apellido_paterno", "rut"]
-
-    objects = CuentaManager()
-
-    def __str__(self):
-        return f"{self.correo} ({self.rol})"
-
-class Cliente(models.Model):
-    cuenta = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="cliente"
-    )
-    direccion = models.ForeignKey(
-        "Direccion", on_delete=models.SET_NULL,
-        null=True, blank=True, related_name="clientes"
-    )
-    rut = models.CharField(max_length=12, unique=True)
-    telefono = models.CharField(max_length=20, blank=True, null=True)
-    correo = models.EmailField(blank=True, null=True)  # opcional si ya lo tienes en Cuenta
-    estado = models.BooleanField(default=True)
-
-    def __str__(self):
-        return f"Cliente: {self.cuenta.nombre} {self.cuenta.apellido_paterno}"
+    class Meta:
+        db_table = 'ROL'
+        verbose_name = 'Rol'
+        verbose_name_plural = 'Roles'
     
-class Empleado(models.Model):
-    cuenta = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="empleado"
-    )
-    rut = models.CharField(max_length=12, unique=True)
-    nombre = models.CharField(max_length=50)
-    apellido_paterno = models.CharField(max_length=50)
-    apellido_materno = models.CharField(max_length=50, blank=True, null=True)
-    email = models.EmailField(unique=True)
-    telefono = models.CharField(max_length=20, blank=True, null=True)
-    estado = models.BooleanField(default=True)
-    ultimo_login = models.DateTimeField(blank=True, null=True)
-
     def __str__(self):
-        return f"Empleado: {self.nombre} {self.apellido_paterno}"
-    
+        return self.nombre_rol
+
 class Direccion(models.Model):
-    cuenta = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="direcciones"
-    )
+    id_direccion = models.AutoField(primary_key=True)
     calle = models.CharField(max_length=100)
-    numero = models.CharField(max_length=10)
-    region = models.CharField(max_length=50)
+    numero = models.CharField(max_length=50)
     comuna = models.CharField(max_length=50)
-    numero_departamento = models.CharField(
+    region = models.CharField(max_length=50)
+    depto_oficina = models.CharField(
         max_length=20, blank=True, null=True,
         help_text="Depto / Oficina / Otro dato adicional"
     )
-    codigo_postal = models.CharField(max_length=10, blank=True, null=True)
     referencia = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'DIRECCION'
+        verbose_name = 'Direccion'
+        verbose_name_plural = 'Direcciones'
 
     def __str__(self):
         return f"{self.calle} {self.numero}, {self.comuna}, {self.region}"
+
+class Usuario(AbstractBaseUser, PermissionsMixin):
+    correo = models.EmailField(unique=True) 
+    nombre = models.CharField(max_length=100)
+    apellido_paterno = models.CharField(max_length=100, blank=True)
+    apellido_materno = models.CharField(max_length=100, blank=True)
+    
+    rol = models.ForeignKey(
+        Rol,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_column='id_rol'
+    )
+    direccion = models.ForeignKey(
+        Direccion,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_column='id_direccion'
+    )
+    
+    # --- Campos requeridos por Django Admin ---
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    
+    # AÑADE ESTE CAMPO (PermissionsMixin lo espera)
+    is_superuser = models.BooleanField(default=False) 
+    
+    date_joined = models.DateTimeField(auto_now_add=True)
+
+    # --- Configuración ---
+    objects = CuentaManager() 
+    USERNAME_FIELD = 'correo'
+    REQUIRED_FIELDS = ['nombre', 'apellido_paterno'] 
+
+    class Meta:
+        db_table = 'USUARIO'
+
+    def __str__(self):
+        return self.correo
+        
+    # Estas propiedades están perfectas
+    @property
+    def first_name(self):
+        return self.nombre
+        
+    @property
+    def last_name(self):
+        return self.apellido_paterno
+
+class Empleado(models.Model):
+    id_empleado = models.AutoField(primary_key=True)
+    usuario = models.OneToOneField(
+        Usuario,
+        on_delete=models.CASCADE,
+        db_column='id_usuario'
+    )
+    cargo = models.CharField(max_length=100)
+    fecha_contratacion = models.DateField(default=timezone.now)
+
+    class Meta:
+        db_table = 'EMPLEADO'
+
+
+    def __str__(self):
+        return f"Empleado: {self.usuario.nombre} {self.usuario.apellido_paterno} ({self.cargo})"
+    
