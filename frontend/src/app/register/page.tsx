@@ -34,7 +34,7 @@ export default function Register() {
 
     // Validaciones simples cliente
     if (!nombre || !apellidoP || !correo || !password || !passwordConfirm) {
-      setError("Completa los campos obligatorios (nombre, apellido paterno, correo y contraseñas).");
+      setError("Completa los campos obligatorios (nombre, apellido paterno, rut, email, telefono y contraseñas).");
       return;
     }
     if (password !== passwordConfirm) {
@@ -77,7 +77,7 @@ export default function Register() {
       });
 
       const data = await res.json();
-
+      
       if (!res.ok) {
         // Formatea errores devueltos por DRF
         if (data && typeof data === "object") {

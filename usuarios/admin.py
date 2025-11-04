@@ -16,7 +16,9 @@ class UsuarioAdmin(UserAdmin):
         'apellido_paterno', 
         'rol', 
         'is_active', 
-        'is_staff'
+        'is_staff',
+        'telefono',
+        'rut',
     )
     
     # --- Campos para la barra de búsqueda ---

@@ -24,10 +24,14 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
     def create(self, request, *args, **kwargs):
-        # usa la lógica estándar de CreateAPIView para validar y guardar
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        try:
+            user = serializer.save()
+        except IntegrityError as e:
+            # devolver 400 en vez de 500 con mensaje legible
+            return Response({"detail": "Error al guardar en la base de datos.", "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         tokens = get_tokens_for_user(user)
         user_data = UserSerializer(user).data
         headers = self.get_success_headers(serializer.data)
