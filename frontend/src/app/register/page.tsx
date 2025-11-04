@@ -23,7 +23,14 @@ export default function Register() {
             />
           </div>
           <div>
-            <label className="block mb-1">Apellido</label>
+            <label className="block mb-1">Apellido paterno</label>
+            <input
+            type="text"
+            className="w-full border border-gray-300 rounded-md p-2"
+            />
+          </div>
+          <div>
+            <label className="block mb-1">Apellido Materno</label>
             <input
             type="text"
             className="w-full border border-gray-300 rounded-md p-2"
@@ -50,7 +57,7 @@ export default function Register() {
             className="w-full border border-gray-300 rounded-md p-2"
             />
           </div>
-          <div className="py-8">
+          <div className="py-4">
             <label className="block mb-1">Contraseña</label>
             <input
             type="password"
