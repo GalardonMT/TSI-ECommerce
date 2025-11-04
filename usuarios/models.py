@@ -60,6 +60,8 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     nombre = models.CharField(max_length=100)
     apellido_paterno = models.CharField(max_length=100, blank=True)
     apellido_materno = models.CharField(max_length=100, blank=True)
+    rut = models.CharField(max_length=100, blank=True)
+    telefono = models.CharField(max_length=100, blank=True)
     
     rol = models.ForeignKey(
         Rol,
@@ -117,7 +119,6 @@ class Empleado(models.Model):
 
     class Meta:
         db_table = 'EMPLEADO'
-
 
     def __str__(self):
         return f"Empleado: {self.usuario.nombre} {self.usuario.apellido_paterno} ({self.cargo})"
