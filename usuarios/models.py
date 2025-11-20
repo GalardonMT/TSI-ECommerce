@@ -45,7 +45,6 @@ class Direccion(models.Model):
         max_length=20, blank=True, null=True,
         help_text="Depto / Oficina / Otro dato adicional"
     )
-    referencia = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = 'DIRECCION'
@@ -62,6 +61,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     apellido_materno = models.CharField(max_length=100, blank=True)
     rut = models.CharField(max_length=100, blank=True)
     telefono = models.CharField(max_length=100, blank=True)
+    last_login = models.DateTimeField(blank=True, null=True)
     
     rol = models.ForeignKey(
         Rol,

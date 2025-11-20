@@ -16,6 +16,7 @@ export default function Footer() {
               </li>
               <li>
                 <a href="">Carretera general San Martin 3047 </a>
+                {/* Mover a Sprites.svg */}
                 <svg className="inline-block" width="17" height="20" viewBox="0 0 17 20" xmlns="http://www.w3.org/2000/svg">
                   <use xlinkHref="/sprites.svg#icon-map-pin" width="17" height="20" stroke="white" strokeWidth="1"/>
                 </svg>

@@ -49,7 +49,7 @@ export default function Register() {
       nombre,
       apellido_paterno: apellidoP,
       apellido_materno: apellidoM || "",
-      rut: rut || null,
+      rut: rut || "",
       telefono: telefono || "",
       password,
       password_confirm: passwordConfirm,
@@ -63,7 +63,6 @@ export default function Register() {
         comuna: comuna || "",
         region: region || "",
         depto_oficina: depto || "",
-        referencia: referencia || "",
       };
     }
 

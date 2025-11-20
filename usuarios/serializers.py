@@ -18,7 +18,7 @@ class DireccionSerializer(serializers.ModelSerializer):
         model = Direccion
         fields = [
             "id_direccion", "calle", "numero", "comuna",
-            "region", "depto_oficina", "referencia"
+            "region", "depto_oficina"
         ]
         read_only_fields = ("id_direccion",)
 
@@ -52,7 +52,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "id", "correo", "nombre", "apellido_paterno", "apellido_materno",
-            "password", "password_confirm", "id_rol", "direccion"
+            "rut", "telefono", "password", "password_confirm", "id_rol", "direccion"
         ]
         read_only_fields = ["id"]
 
@@ -67,26 +67,20 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        # extraer campos no pasados al modelo directo
         password = validated_data.pop("password")
         validated_data.pop("password_confirm", None)
         id_rol = validated_data.pop("id_rol", None)
         direccion_data = validated_data.pop("direccion", None)
 
-        # crear objeto usuario (sin password aún)
         user = User(**validated_data)
 
-        # asignar rol si viene
         if id_rol:
             try:
                 rol = Rol.objects.get(id_rol=id_rol)
                 user.rol = rol
             except Rol.DoesNotExist:
-                # lanzar error si prefieres:
-                # raise serializers.ValidationError({"id_rol":"Rol no existe."})
                 pass
 
-        # si viene direccion, crearla y asignar
         if direccion_data:
             direccion = Direccion.objects.create(**direccion_data)
             user.direccion = direccion
@@ -94,6 +88,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+
 
 class LoginSerializer(serializers.Serializer):
     correo = serializers.EmailField()
