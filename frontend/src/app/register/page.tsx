@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { RegionesYComunas } from "../../../lib/regiones";
+import { RegionesYComunas } from "../../lib/regiones";
 
 export default function Register() {
   const router = useRouter();
@@ -25,8 +25,6 @@ export default function Register() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,17 +65,11 @@ export default function Register() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/usuarios/auth/register/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const { createAccount } = await import('@/api/account/createAccount');
+      const resp = await createAccount(payload);
+      const data = resp.data;
 
-      const data = await res.json();
-
-      if (!res.ok) {
+      if (!resp.ok) {
         // Formatea errores devueltos por DRF
         if (data && typeof data === "object") {
           const msg = Object.entries(data)
@@ -92,7 +84,7 @@ export default function Register() {
       }
 
       // Si backend devuelve tokens, guardarlos
-      if (data.tokens) {
+      if (data?.tokens) {
         try {
           localStorage.setItem("access", data.tokens.access);
           localStorage.setItem("refresh", data.tokens.refresh);
