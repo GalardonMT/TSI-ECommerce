@@ -15,8 +15,11 @@ export default function ProductsPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<string>("default");
   const categories = Array.from(new Set(productsData.map(p => p.subtitle)));
+
+  // Filtra y ordena la lista de productos
   const processedProducts = productsData
     .filter(product => {
+      // Lógica del Filtro
       if (selectedCategories.length === 0) {
         return true; // Muestra todos si no hay filtro
       }
@@ -34,9 +37,14 @@ export default function ProductsPage() {
       }
     });
 
-  // --- 6. HANDLER: Función para actualizar los filtros ---
-  const handleFilterChange = (category: string) => {
-    // Lógica para marcar/desmarcar el checkbox
+  const handleFilterChange = (category: string | null) => {
+    
+    if (category === null) {
+      setSelectedCategories([]);
+      return;
+    }
+
+    // Lógica para marcar/desmarcar el checkbox específico
     setSelectedCategories(prev =>
       prev.includes(category)
         ? prev.filter(c => c !== category) // Quitar
@@ -44,7 +52,6 @@ export default function ProductsPage() {
     );
   };
 
-  // --- 7. RENDER (El JSX que se muestra) ---
   return ( 
     <div className="container mx-auto py-16 px-4">
       
@@ -63,11 +70,9 @@ export default function ProductsPage() {
       </div>
 
       {/* Layout de 2 Columnas */}
-      {/* CORREGIDO: Añadida la clase 'flex' */}
       <div className="flex flex-col lg:flex-row gap-8">
         
         {/* --- Columna Izquierda --- */}
-        {/* 8. Pasa las PROPS al Sidebar */}
         <FilterSidebar
           categories={categories}
           selectedCategories={selectedCategories}
@@ -76,7 +81,6 @@ export default function ProductsPage() {
 
         {/* --- Columna Derecha --- */}
         <div className="w-full lg:w-3/4">
-          {/* 9. Pasa las PROPS (la lista filtrada) al ProductList */}
           <ProductList products={processedProducts} />
         </div>
       </div>

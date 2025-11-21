@@ -29,7 +29,7 @@ export default function ProductList({ products }: ProductListProps) {
           {/* Detalles del Producto */}
           <div className="mt-4 text-center">
             <h3 className="text-sm text-gray-700">
-              <Link href={product.href || "#"}>
+              <Link href={`/products/${product.id}`}>
                 <span aria-hidden="true" className="absolute inset-0" />
                 {product.title}
               </Link>
