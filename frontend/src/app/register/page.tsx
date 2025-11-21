@@ -65,7 +65,7 @@ export default function Register() {
     }
 
     try {
-      const { createAccount } = await import('@/api/account/createAccount');
+      const { createAccount } = await import('@/app/api/account/createAccount');
       const resp = await createAccount(payload);
       const data = resp.data;
 
