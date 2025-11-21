@@ -27,7 +27,7 @@ const SLIDES = [
 
 export default function Hero() {
   return (
-    <section className="relative w-full">
+    <section className="relative -translate-y-20 w-full">
       <Carousel
       opts={{loop: true}}
       className="w-full"
@@ -45,7 +45,7 @@ export default function Hero() {
                     src={slide.image}
                     alt={slide.alt}
                     fill
-                    className="object-cover"
+                    className="object-cover brightness-65"
                     priority={slide.id === 1}
                   />
                 ) : (

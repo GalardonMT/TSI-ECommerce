@@ -46,9 +46,9 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     'core',
     'usuarios',
-    'catalogo',
     'inventario',
     'ventas',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
@@ -72,8 +72,7 @@ REST_FRAMEWORK = {
 # CORS (ajusta dominios en produccion)
 CORS_ALLOW_ALL_ORIGINS = True
 
-# modelo de usuario custom
-AUTH_USER_MODEL = "usuarios.Cuenta"
+AUTH_USER_MODEL = 'usuarios.Usuario'
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -101,11 +100,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
   "default": {
     "ENGINE": "django.db.backends.postgresql",
-    "NAME": os.getenv("PG_NAME","ecommerce_db_yrrf"),
-    "USER": os.getenv("PG_USER","ecommerce_db_yrrf_user"),
-    "PASSWORD": os.getenv("PG_PASS","o6BxaJd4DpL2cDZ9J5gXUFiDUkhYMFEf"),
-    "HOST": os.getenv("PG_HOST", default="127.0.0.1"),
-    "PORT": os.getenv("PG_PORT", default="5432"),
+    "NAME": env("PG_NAME", default="ecommercebd"), 
+    "USER": env("PG_USER", default="postgres"),
+    "PASSWORD": env("PG_PASS", default="1234"),
+    "HOST": env("PG_HOST", default="localhost"),
+    "PORT": env("PG_PORT", default="5432"),
   }
 }
 
