@@ -1,13 +1,11 @@
-from django.shortcuts import render
-
-from rest_framework import viewsets, permissions
-from .models import Producto
-from .serializers import ProductoSerializer
-
+from rest_framework import viewsets
+from .models import Producto, Categoria
+from .serializers import ProductoSerializer, CategoriaSerializer
 
 class ProductoViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.all().order_by('nombre')
+    queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
-    permission_classes = [permissions.AllowAny]
 
-# Create your views here.
+class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer
