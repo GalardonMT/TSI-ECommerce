@@ -7,6 +7,11 @@ import { usePathname, useRouter } from 'next/navigation';
 export default function Header() {
   const [open, setOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [user, setUser] = useState<any | null>(null);
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [openSearch, setOpenSearch] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null); // referencia al contenedor
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -21,8 +26,64 @@ export default function Header() {
   const [cartOpen, setCartOpen] = useState(false);
   const cartRef = useRef<HTMLDivElement>(null);
 
+  // Helper to determine if a given user should be considered an 'Empleado'.
+  // Checks multiple possible shapes and also supports a comma-separated
+  // env var `NEXT_PUBLIC_EMPLEADO_EMAILS` for fallback matching by email or domain.
+  const userIsEmpleado = (u: any) => {
+    try {
+      if (!u) return false;
+      // Allow superusers/staff as well
+      if (u.is_superuser || u.is_staff) return true;
+      // normalize email for later checks
+      const email = (u.email || u.correo || '').toString().toLowerCase();
+
+      // If user has a 'rol' object with a name field
+      if (u.rol && typeof u.rol === 'object') {
+        const nombre = (u.rol.nombre_rol || u.rol.nombre || '').toString().toLowerCase();
+        if (nombre.includes('empleado')) return true;
+      }
+      // If 'rol' is a string
+      if (typeof u.rol === 'string' && u.rol.toLowerCase().includes('empleado')) return true;
+      // Common alternate field names
+      if (u.role && typeof u.role === 'string' && u.role.toLowerCase().includes('empleado')) return true;
+      if (u.role_name && typeof u.role_name === 'string' && u.role_name.toLowerCase().includes('empleado')) return true;
+      // Boolean flag fallback
+      if (u.is_empleado) return true;
+
+      // Fallback: check env var list of emails/domains
+      const raw = (process.env.NEXT_PUBLIC_EMPLEADO_EMAILS || '').toString();
+      if (raw) {
+        const items = raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+        if (email) {
+          for (const it of items) {
+            if (it.startsWith('@')) {
+              // domain match
+              if (email.endsWith(it)) return true;
+            } else if (it.includes('@')) {
+              // exact email match
+              if (email === it) return true;
+            } else {
+              // substring match
+              if (email.includes(it)) return true;
+            }
+          }
+        }
+      }
+
+      // Development fallback: consider specific emails as empleados (useful for local testing)
+      const devFallback = ['admin@admin.cl'];
+      if (email && devFallback.includes(email)) return true;
+
+      return false;
+    } catch (e) {
+      return false;
+    }
+  };
+
   // Detectar clic fuera
   useEffect(() => {
+    // NOTE: loading user from localStorage is done on mount (see separate effect)
+
     function handleClickOutside(event: MouseEvent) {
       if (
         dropdownRef.current &&
@@ -43,6 +104,37 @@ export default function Header() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [open]);
+
+  // Load user from localStorage once on mount (avoid re-loading when modal opens/closes)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('auth');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.user) {
+          const augmented = { ...parsed.user, is_empleado: userIsEmpleado(parsed.user) };
+          setUser(augmented);
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  // Persist user when changed
+  useEffect(() => {
+    try {
+      if (user) {
+        localStorage.setItem('auth', JSON.stringify({ user }));
+      } else {
+        localStorage.removeItem('auth');
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [user]);
+
+  
 
   // Click outside for search box (ignore clicks on the search toggle button)
   useEffect(() => {
@@ -118,6 +210,8 @@ export default function Header() {
     return () => observer.disconnect();
   }, [isHome]);
 
+  
+
   return (
     <>
       {/* sentinel used to detect when the header reaches the top of the viewport */}
@@ -128,6 +222,7 @@ export default function Header() {
       <Link href="/" className="text-2xl font-bold tracking-wider font-Sansation whitespace-nowrap">
         PRO NANO CHILE
       </Link>
+      
       <div className="flex flex-1 flex-row justify-end items-center gap-4">
         {/* Centered Search (slides from top). Keep mounted for smooth close animation */}
         <div
@@ -201,60 +296,156 @@ export default function Header() {
           {open && (
             <div className="absolute right-0 mt-14 w-72 bg-white text-gray-800 border-b-gray-950 border-1 rounded-sm p-4 z-50">
               <form className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Email</label>
-                  <input
-                    type="text"
-                    placeholder="Ingresa tu email"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-                  />
-                </div>
+                    {user ? (
+                      <div className="space-y-3">
+                        <div className="text-sm">Conectado como</div>
+                        <div className="font-semibold">{user.email}</div>
 
-                <div className="relative">
-                  <label className="block text-sm font-medium mb-1">Contraseña</label>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="*************"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute size-12 top-1/3 right-0 px-3"
-                  >
-                    <svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <use xlinkHref="/sprites.svg#icon-password-eye"/>
-                      <use className={showPassword ? "flex" : "hidden"} xlinkHref="/sprites.svg#icon-password-eye-off"/>
-                    </svg>
+                        {/* Panel visible only to users with role 'Empleado' or when augmented flag exists */}
+                        {(user?.is_empleado || userIsEmpleado(user)) && (
+                          <div className="pt-2">
+                            <a
+                              href="http://localhost:3000/admin/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full block bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 text-center"
+                            >
+                              Panel de administración
+                            </a>
+                          </div>
+                        )}
 
-                  </button>
-                </div>
+                        <div className="pt-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // simple logout
+                              setUser(null);
+                              setEmail('');
+                              setPassword('');
+                              setOpen(false);
+                            }}
+                            className="w-full bg-gray-200 text-gray-700 py-2 rounded-md font-semibold hover:bg-gray-300 transition"
+                          >
+                            Cerrar sesión
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Email</label>
+                          <input
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            type="email"
+                            placeholder="Ingresa tu email"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+                          />
+                        </div>
 
-                <button
-                  type="button"
-                  className="w-full bg-black text-white py-2 rounded-md font-semibold hover:bg-zinc-900 transition"
-                >
-                  Iniciar sesión
-                </button>
+                        <div className="relative">
+                          <label className="block text-sm font-medium mb-1">Contraseña</label>
+                          <input
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            type={showPassword ? "text" : "password"}
+                            placeholder="*************"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute size-12 top-1/3 right-0 px-3"
+                          >
+                            <svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <use xlinkHref="/sprites.svg#icon-password-eye"/>
+                              <use className={showPassword ? "flex" : "hidden"} xlinkHref="/sprites.svg#icon-password-eye-off"/>
+                            </svg>
 
-                <Link
-                  href="/register"
-                  className="w-full bg-gray-200 text-gray-700 py-2 rounded-md font-semibold hover:bg-gray-300 transition inline-block text-center"
-                >
-                  Registrarse
-                </Link>
+                          </button>
+                        </div>
 
-                <button
-                  type="button"
-                  className="w-full text-sm text-blue-600 hover:underline"
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
-              </form>
+                        {loginError && <div className="text-sm text-red-600">{loginError}</div>}
+
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setLoginError(null);
+                            setLoggingIn(true);
+                            try {
+                              // Try to login via API - adapt endpoint as needed
+                                // Try to login via backend API (Django). Configure base URL in NEXT_PUBLIC_API_URL
+                                  const base = process.env.NEXT_PUBLIC_API_URL || '';
+                                  const res = await fetch(`${base}/api/auth/login/`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ correo: email, password }),
+                              });
+
+                              if (res.ok) {
+                                const data = await res.json();
+                                // Expect data.user or data.email. Adjust to your backend shape.
+                                // If your Django view returns tokens (simplejwt -> access/refresh)
+                                if (data.access || data.token || data.refresh) {
+                                  // store tokens (consider HttpOnly cookies for production)
+                                  if (data.access) localStorage.setItem('access', data.access);
+                                  if (data.refresh) localStorage.setItem('refresh', data.refresh);
+                                  if (data.token) localStorage.setItem('token', data.token);
+                                }
+
+                                // Prefer backend-provided user object (may include role fields)
+                                const returnedUser = data.user ?? (data.email ? { email: data.email } : { email });
+                                const augmentedUser = { ...returnedUser, is_empleado: userIsEmpleado(returnedUser) };
+                                setUser(augmentedUser);
+                                setOpen(false);
+                              } else if (res.status === 401) {
+                                setLoginError('Email o contraseña incorrectos');
+                              } else {
+                                // fallback: try simple mock login for development
+                                // If API returns non-200, show a helpful message
+                                const text = await res.text();
+                                setLoginError('Error al iniciar sesión: ' + (text || res.statusText));
+                              }
+                              } catch (err) {
+                                // network error or API missing: fallback mock success for dev convenience
+                                // Remove this fallback in production
+                                console.warn('login request failed, using mock login', err);
+                                const fallbackUser = { email, is_empleado: userIsEmpleado({ email }) };
+                                setUser(fallbackUser);
+                              } finally {
+                              setLoggingIn(false);
+                            }
+                          }}
+                          className="w-full bg-black text-white py-2 rounded-md font-semibold hover:bg-zinc-900 transition"
+                          disabled={loggingIn}
+                        >
+                          {loggingIn ? 'Iniciando...' : 'Iniciar sesión'}
+                        </button>
+
+                        <Link
+                          href="/register"
+                          className="w-full bg-gray-200 text-gray-700 py-2 rounded-md font-semibold hover:bg-gray-300 transition inline-block text-center"
+                        >
+                          Registrarse
+                        </Link>
+
+                        <button
+                          type="button"
+                          className="w-full text-sm text-blue-600 hover:underline"
+                        >
+                          ¿Olvidaste tu contraseña?
+                        </button>
+                      </>
+                    )}
+                  </form>
             </div>
           )}
         </div>
         
+        {/* Visible Panel de administración (fuera del desplegable) para 'Empleado' */}
+        
+
         {/* Botón Carrito de compra*/}
         <button onClick={() => setCartOpen(true)} className="flex flex-row items-center justify-self-center">
             <div className="px-4 py-2">

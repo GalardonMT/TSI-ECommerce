@@ -62,3 +62,4 @@ export default function ProductCard({ product, onRemove, onChangeQty }: Props) {
     </div>
   );
 }
+

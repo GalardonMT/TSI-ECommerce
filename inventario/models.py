@@ -49,6 +49,35 @@ class Producto(models.Model):
         
     def __str__(self):
         return self.nombre
+
+
+class ProductoImagen(models.Model):
+    """Imágenes asociadas a un `Producto`.
+
+    - `id_imagen`: PK (AutoField)
+    - `producto`: FK a `Producto` (db_column `id_producto`)
+    - `image`: campo de texto que puede contener la URL, ruta o el contenido en texto/base64
+    - `orden`: entero opcional para ordenar imágenes del mismo producto
+    """
+
+    id_imagen = models.AutoField(primary_key=True)
+    producto = models.ForeignKey(
+        Producto,
+        on_delete=models.CASCADE,
+        db_column='id_producto',
+        related_name='imagenes',
+    )
+    image = models.TextField(blank=True, null=True, help_text='Ruta/URL o contenido de la imagen en formato texto')
+    orden = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = 'PRODUCTO_IMAGEN'
+        verbose_name = 'Imagen de Producto'
+        verbose_name_plural = 'Imágenes de Producto'
+        ordering = ['orden']
+
+    def __str__(self):
+        return f"Imagen {self.id_imagen} - {self.producto.nombre if self.producto else 'Sin producto'}"
         
 
 class MovimientoInventario(models.Model):

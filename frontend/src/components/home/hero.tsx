@@ -45,7 +45,7 @@ export default function Hero() {
                     src={slide.image}
                     alt={slide.alt}
                     fill
-                    className="object-cover"
+                    className="object-cover brightness-10"
                     priority={slide.id === 1}
                   />
                 ) : (

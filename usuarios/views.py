@@ -4,6 +4,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, login
+from django.utils import timezone
+import logging
+
+logger = logging.getLogger(__name__)
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 
@@ -38,9 +43,6 @@ class RegisterView(generics.CreateAPIView):
         return Response({"user": user_data, "tokens": tokens}, status=status.HTTP_201_CREATED, headers=headers)
 
 class LoginAPIView(APIView):
-    """
-    Login: espera { correo, password } y devuelve access + refresh + datos usuario.
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -49,16 +51,42 @@ class LoginAPIView(APIView):
         correo = serializer.validated_data["correo"]
         password = serializer.validated_data["password"]
 
-        # autenticación manual (recomendado cuando USERNAME_FIELD != 'username')
-        user = User.objects.filter(correo__iexact=correo).first()
-        if user is None or not user.check_password(password):
+        user = authenticate(request, correo=correo, password=password)
+        if user is None:
             return Response({"detail": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
         if not user.is_active:
             return Response({"detail": "Cuenta desactivada"}, status=status.HTTP_403_FORBIDDEN)
 
+        # Log the user in (this triggers user_logged_in signal in standard setups)
+        login(request, user)
+
+        # Ensure last_login is stored in the database (explicit save in case signals are not connected)
+        try:
+            ts = timezone.now()
+            user.last_login = ts
+            user.save(update_fields=["last_login"])
+            logger.debug("Updated last_login for user %s to %s", user.pk, ts)
+        except Exception as exc:
+            # do not block login if saving last_login fails
+            logger.exception("Failed updating last_login for user %s: %s", getattr(user, 'pk', None), exc)
+
+        # Re-fetch the user from DB to be sure the persisted value is readable
+        try:
+            refreshed = User.objects.get(pk=user.pk)
+        except Exception:
+            refreshed = user
+
         tokens = get_tokens_for_user(user)
-        user_data = UserSerializer(user).data
-        return Response({"user": user_data, "tokens": tokens}, status=status.HTTP_200_OK)
+        user_data = UserSerializer(refreshed).data
+
+        return Response({
+            "user": user_data,
+            "tokens": tokens,
+            "access": tokens.get("access"),
+            "refresh": tokens.get("refresh"),
+            "last_login_db": str(refreshed.last_login) if getattr(refreshed, 'last_login', None) else None,
+        }, status=status.HTTP_200_OK)
+
 
 class LogoutAPIView(APIView):
     """
