@@ -314,6 +314,27 @@ export default function Header() {
                             </a>
                           </div>
                         )}
+                        {/* Link to Pedidos (visible to any logged-in user) */}
+                        <div className="pt-2">
+                          <Link
+                            href="/pedidos"
+                            onClick={() => setOpen(false)}
+                            className="w-full block bg-gray-100 text-gray-800 py-2 rounded-md font-semibold hover:bg-gray-200 text-center"
+                          >
+                            Pedidos
+                          </Link>
+                        </div>
+                        {/* Link to perfil */}
+                        <div className="pt-2">
+                          <Link
+                            href="/perfil"
+                            onClick={() => setOpen(false)}
+                            className="w-full block bg-gray-100 text-gray-800 py-2 rounded-md font-semibold hover:bg-gray-200 text-center"
+                          >
+                            Perfil
+                          </Link>
+                        </div>
+
 
                         <div className="pt-2">
                           <button
