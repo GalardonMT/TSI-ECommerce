@@ -28,4 +28,6 @@ urlpatterns = [
     path("api/auth/me/", me),
     path('api/usuarios/', include('usuarios.urls')),
     path('api/inventario/', include('inventario.urls')),
+    path("usuarios/", include("usuarios.urls")),
+
 ]

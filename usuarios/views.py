@@ -11,14 +11,31 @@ import logging
 logger = logging.getLogger(__name__)
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from django.db import IntegrityError
 
 from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
+from rest_framework.permissions import IsAuthenticated
+from .serializers import UpdateUserSerializer
 
 User = get_user_model()
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     return {"refresh": str(refresh), "access": str(refresh.access_token)}
+
+class PerfilUpdateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        user = request.user
+        serializer = UpdateUserSerializer(user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"detail": "Perfil actualizado correctamente"}, status=200)
+
+        return Response(serializer.errors, status=400)
+
 
 class RegisterView(generics.CreateAPIView):
     """

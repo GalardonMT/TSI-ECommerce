@@ -91,8 +91,17 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "id", "correo", "nombre", "apellido_paterno", "apellido_materno",
-            "rut", "telefono", "password", "password_confirm", "id_rol", "direccion"
+            "id",
+            "correo",
+            "nombre",
+            "apellido_paterno",
+            "apellido_materno",
+            "rut",
+            "telefono",
+            "password",
+            "password_confirm",
+            "id_rol",
+            "direccion",
         ]
         read_only_fields = ["id"]
 
@@ -183,3 +192,49 @@ class RegisterSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     correo = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+
+
+class UpdateUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer para actualizar parcialmente el perfil del usuario.
+    No permite modificar RUT ni correo.
+    """
+    direccion = DireccionSerializer(required=False)
+
+    class Meta:
+        model = User
+        fields = [
+            "nombre",
+            "apellido_paterno",
+            "apellido_materno",
+            "telefono",
+            "direccion",
+        ]
+
+    def validate_telefono(self, value):
+        return validar_telefono(value)
+
+    def update(self, instance, validated_data):
+        # --- Actualizar campos directos ---
+        instance.nombre = validated_data.get("nombre", instance.nombre)
+        instance.apellido_paterno = validated_data.get("apellido_paterno", instance.apellido_paterno)
+        instance.apellido_materno = validated_data.get("apellido_materno", instance.apellido_materno)
+        instance.telefono = validated_data.get("telefono", instance.telefono)
+
+        # --- Actualizar dirección si viene ---
+        direccion_data = validated_data.get("direccion")
+
+        if direccion_data:
+            # si el usuario NO tiene dirección → crearla
+            if instance.direccion is None:
+                nueva_direccion = Direccion.objects.create(**direccion_data)
+                instance.direccion = nueva_direccion
+            else:
+                # actualizar dirección existente
+                direccion = instance.direccion
+                for campo, valor in direccion_data.items():
+                    setattr(direccion, campo, valor)
+                direccion.save()
+
+        instance.save()
+        return instance
