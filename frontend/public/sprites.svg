@@ -1,58 +1,49 @@
 <svg xmlns="http://www.w3.org/2000/svg">
   
-  <!-- Icono de usuario -->
-  <symbol id="icon-user" viewBox="0 0 50 50">
-    <path d="M25 23.8245C28.0388 23.8245 30.9532 22.5695 33.102 20.3355C35.2508 18.1015 36.458 15.0716 36.458 11.9122C36.458 8.75292 35.2508 5.723 33.102 3.48902C30.9532 1.25504 28.0388 0 25 0C21.9612 0 19.0468 1.25504 16.898 3.48902C14.7492 5.723 13.542 8.75292 13.542 11.9122C13.542 15.0716 14.7492 18.1015 16.898 20.3355C19.0468 22.5695 21.9612 23.8245 25 23.8245ZM25 29.0582C9.76591 29.0582 0 37.7983 0 42.0538V50H50V42.0538C50 36.9075 40.7545 29.0582 25 29.0582Z"/>
+  <symbol id="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+    <circle cx="12" cy="7" r="4"></circle>
   </symbol>
 
-  <!-- Icono de carrito -->
-  <symbol id="icon-cart" viewBox="0 0 24 24">
-    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-    <line x1="3" y1="6" x2="21" y2="6"/>
-    <path d="M16 10a4 4 0 0 1-8 0"/>
+  <symbol id="icon-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="9" cy="21" r="1"></circle>
+    <circle cx="20" cy="21" r="1"></circle>
+    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
   </symbol>
 
-  <!-- X icon -->
-  <symbol id="icon-close" viewBox="0 0 24 24">
-    <path d="M18 6L6 18" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M6 6L18 18" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  <symbol id="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
   </symbol>
 
-  <!-- Lupa -->
-  <symbol id="icon-search" viewBox="0 0 50 50">
-    <circle cx="20.0987" cy="20.0987" r="18.5987" stroke="white" stroke-width="3"/>
-    <line y1="-1.5" x2="20.3197" y2="-1.5" transform="matrix(0.711303 0.702886 -0.711303 0.702886 33.7883 33.9594)" stroke="white" stroke-width="3"/>
+  <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="8"></circle>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
   </symbol>
 
-  <!-- Password eye icon -->
-  <symbol id="icon-password-eye" viewBox="0 0 30 30">
-    <g opacity="0.5">
-      <path d="M1.25 15C1.25 15 6.25 5 15 5C23.75 5 28.75 15 28.75 15C28.75 15 23.75 25 15 25C6.25 25 1.25 15 1.25 15Z" stroke="#585858" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M15 18.75C17.0711 18.75 18.75 17.0711 18.75 15C18.75 12.9289 17.0711 11.25 15 11.25C12.9289 11.25 11.25 12.9289 11.25 15C11.25 17.0711 12.9289 18.75 15 18.75Z" stroke="#585858" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </g>
+  <symbol id="icon-password-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+    <circle cx="12" cy="12" r="3"></circle>
   </symbol>
 
-  <!-- Password eye off icon -->
-  <symbol id="icon-password-eye-off" viewBox="0 0 30 30">
-    <g opacity="0.5">
-      <line x1="3" y1="26.981" x2="25.981" y2="4.00004" stroke="#585858" stroke-width="2.5" stroke-linecap="round"/>
-    </g>
+  <symbol id="icon-password-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+    <line x1="1" y1="1" x2="23" y2="23"></line>
   </symbol>
 
-  <!-- Map pin-->
-  <symbol id="icon-map-pin" viewBox="0 0 17 20">
-    <path d="M16 8.33337C16 14.1667 8.5 19.1667 8.5 19.1667C8.5 19.1667 1 14.1667 1 8.33337C1 6.34425 1.79018 4.4366 3.1967 3.03007C4.60322 1.62355 6.51088 0.833374 8.5 0.833374C10.4891 0.833374 12.3968 1.62355 13.8033 3.03007C15.2098 4.4366 16 6.34425 16 8.33337Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M8.5 10.8334C9.88071 10.8334 11 9.71409 11 8.33337C11 6.95266 9.88071 5.83337 8.5 5.83337C7.11929 5.83337 6 6.95266 6 8.33337C6 9.71409 7.11929 10.8334 8.5 10.8334Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <symbol id="icon-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+    <circle cx="12" cy="10" r="3"></circle>
   </symbol>
 
-  <!-- Instagram Icon -->
-  <symbol id="instagram-icon" viewBox="0 0 46 46">
-    <path d="M34.2917 11.375H34.3125M12.4167 2H33.25C39.003 2 43.6667 6.6637 43.6667 12.4167V33.25C43.6667 39.003 39.003 43.6667 33.25 43.6667H12.4167C6.6637 43.6667 2 39.003 2 33.25V12.4167C2 6.6637 6.6637 2 12.4167 2ZM31.1667 21.5208C31.4238 23.2547 31.1276 25.0254 30.3203 26.5813C29.513 28.1371 28.2357 29.3988 26.6701 30.1868C25.1044 30.9749 23.3301 31.2492 21.5996 30.9707C19.869 30.6922 18.2703 29.8752 17.0309 28.6358C15.7915 27.3963 14.9744 25.7977 14.696 24.0671C14.4175 22.3366 14.6918 20.5623 15.4798 18.9966C16.2679 17.4309 17.5296 16.1536 19.0854 15.3463C20.6412 14.539 22.412 14.2429 24.1458 14.5C25.9144 14.7623 27.5518 15.5864 28.816 16.8506C30.0803 18.1149 30.9044 19.7522 31.1667 21.5208Z" stroke="#F2F2F2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <symbol id="instagram-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
   </symbol>
 
-  <!-- Facebook Icon -->
-  <symbol id="facebook-icon" viewBox="0 0 27 46">
-    <path d="M24.9167 2H18.6667C15.904 2 13.2545 3.09747 11.301 5.05097C9.34747 7.00447 8.25 9.65399 8.25 12.4167V18.6667H2V27H8.25V43.6667H16.5833V27H22.8333L24.9167 18.6667H16.5833V12.4167C16.5833 11.8641 16.8028 11.3342 17.1935 10.9435C17.5842 10.5528 18.1141 10.3333 18.6667 10.3333H24.9167V2Z" stroke="#F2F2F2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <symbol id="facebook-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
   </symbol>
 
 </svg>

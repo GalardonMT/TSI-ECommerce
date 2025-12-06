@@ -1,50 +1,98 @@
-"use client"; 
+"use client";
 
-import { useState } from "react";
-import { productsData, type Product } from '@/data/products';
-import ProductList from "@/components/products/productList";
-import FilterSidebar from "@/components/products/sideBar"; 
+import { useState, useEffect } from "react";
+import ProductList, { ProductFrontend } from "@/components/products/productList";
+import FilterSidebar from "@/components/products/sideBar";
 
-function parsePrice(priceStr: string | undefined): number {
-  if (!priceStr) return 0;
-  return parseFloat(priceStr.replace('$', '').replace(/\./g, ''));
-}
-
-export default function ProductsPage() { 
+export default function ProductsPage() {
+  // ESTADOS
+  const [products, setProducts] = useState<ProductFrontend[]>([]); // Lista maestra de la API
+  const [categories, setCategories] = useState<string[]>([]);      // Categorías de la API
+  const [loading, setLoading] = useState(true);
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<string>("default");
-  const categories = Array.from(new Set(productsData.map(p => p.subtitle)));
-  const processedProducts = productsData
-    .filter(product => {
-      if (selectedCategories.length === 0) {
-        return true; // Muestra todos si no hay filtro
+
+  //CARGAR DATOS DE DJANGO
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Categorías
+        const resCat = await fetch("http://127.0.0.1:8000/api/inventario/categoria/");
+        const dataCat = await resCat.json();
+        const catNames = dataCat.map((c: any) => c.nombre);
+        setCategories(catNames);
+
+        // Productos
+        const resProd = await fetch("http://127.0.0.1:8000/api/inventario/producto/");
+        const dataProd = await resProd.json();
+        
+        // Procesar datos (Mapeo de Django a React)
+        const formattedProducts = dataProd.map((item: any) => {
+           let imagenUrl = "https://via.placeholder.com/300";
+           
+           if (item.imagenes && item.imagenes.length > 0) {
+             const ruta = item.imagenes[0].image;
+             imagenUrl = ruta.startsWith('http') 
+               ? ruta 
+               : `http://127.0.0.1:8000${ruta.startsWith('/') ? '' : '/'}${ruta}`;
+           }
+
+           return {
+             id: item.id_producto,
+             title: item.nombre,
+             price: item.precio, 
+             imageSrc: imagenUrl,
+             imageAlt: item.nombre,
+             category: item.categoria_nombre || "Sin Categoría", 
+           };
+        });
+
+        setProducts(formattedProducts);
+        setLoading(false);
+
+      } catch (error) {
+        console.error("Error conectando con Django:", error);
+        setLoading(false);
       }
-      return selectedCategories.includes(product.subtitle);
+    };
+
+    fetchData();
+  }, []);
+
+  // LÓGICA DE FILTRADO Y ORDEN 
+  const processedProducts = products
+    .filter(product => {
+      // Si no hay filtros, mostrar todo
+      if (selectedCategories.length === 0) return true;
+      // Comparamos con la categoría real de Django
+      return selectedCategories.includes(product.category);
     })
     .sort((a, b) => {
-      // Lógica de Orden
       switch (sortOption) {
         case 'price-asc':
-          return parsePrice(a.price) - parsePrice(b.price);
+          return a.price - b.price; 
         case 'price-desc':
-          return parsePrice(b.price) - parsePrice(a.price);
+          return b.price - a.price;
         default:
-          return 0; // Orden por defecto
+          return 0;
       }
     });
 
-  // --- 6. HANDLER: Función para actualizar los filtros ---
-  const handleFilterChange = (category: string) => {
-    // Lógica para marcar/desmarcar el checkbox
+  const handleFilterChange = (category: string | null) => {
+    if (category === null) {
+      setSelectedCategories([]);
+      return;
+    }
     setSelectedCategories(prev =>
       prev.includes(category)
-        ? prev.filter(c => c !== category) // Quitar
-        : [...prev, category]              // Añadir
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
     );
   };
 
-  // --- 7. RENDER (El JSX que se muestra) ---
+  if (loading) return <div className="text-center py-20 text-xl">Cargando catálogo...</div>;
+
   return ( 
     <div className="container mx-auto py-16 px-4">
       
@@ -63,20 +111,17 @@ export default function ProductsPage() {
       </div>
 
       {/* Layout de 2 Columnas */}
-      {/* CORREGIDO: Añadida la clase 'flex' */}
       <div className="flex flex-col lg:flex-row gap-8">
         
-        {/* --- Columna Izquierda --- */}
-        {/* 8. Pasa las PROPS al Sidebar */}
+        {/* --- Columna Izquierda (Sidebar) --- */}
         <FilterSidebar
-          categories={categories}
+          categories={categories} // Viene de la API ahora
           selectedCategories={selectedCategories}
           onFilterChange={handleFilterChange}
         />
 
-        {/* --- Columna Derecha --- */}
+        {/* --- Columna Derecha (Lista) --- */}
         <div className="w-full lg:w-3/4">
-          {/* 9. Pasa las PROPS (la lista filtrada) al ProductList */}
           <ProductList products={processedProducts} />
         </div>
       </div>

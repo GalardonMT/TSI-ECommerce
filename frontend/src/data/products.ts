@@ -1,3 +1,5 @@
+// src/data/products.ts
+
 export type Product = {
   id: string;
   subtitle: string;
@@ -6,11 +8,12 @@ export type Product = {
   details: string;
   imageSrc: string;
   imageAlt: string;
-  href?: string; 
-  price?: string; 
+  href?: string;
+  price?: string;
+  images?: string[]; // <--- NUEVO: Array opcional de imágenes
 };
 
-export const productsData: Product[] = [ 
+export const productsData: Product[] = [
   {
     id: "sc13-graphene",
     subtitle: "Recubrimiento Cerámico de Grafeno",
@@ -19,8 +22,10 @@ export const productsData: Product[] = [
     details: "Protección de hasta +5 años...",
     imageSrc: "/SC13.jpg",
     imageAlt: "Botella SC13",
-    href: "/productos/sc13-graphene",
+    href: "/products/sc13-graphene",
     price: "$15.000",
+    // AGREGAMOS LAS IMÁGENES AQUÍ (Usa tus nombres de archivo reales)
+    images: ["/SC13.jpg", "/SuperCoat.jpg", "/T05.png", "/1.png"],
   },
   {
     id: "t05-textile",
@@ -32,6 +37,7 @@ export const productsData: Product[] = [
     imageAlt: "Botella T05",
     href: "/productos/t05-textile",
     price: "$6.000",
+    images: ["/T05.png", "/SC13.jpg", "/SuperCoat.jpg"], // Ejemplo
   },
   {
     id: "super-coat",
@@ -43,6 +49,7 @@ export const productsData: Product[] = [
     imageAlt: "Botella Super Coat",
     href: "/productos/super-coat",
     price: "$8.000",
+    images: ["/SuperCoat.jpg", "/SC13.jpg"], // Ejemplo
   },
   {
     id: "glass-coating",
@@ -54,5 +61,6 @@ export const productsData: Product[] = [
     imageAlt: "Aplicador Glass Coating",
     href: "/productos/glass-coating",
     price: "$5.000",
+    images: ["/CoatingGlass.jpg"], // Ejemplo
   },
 ];

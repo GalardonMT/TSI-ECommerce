@@ -1,9 +1,6 @@
-from django.shortcuts import render
-
-from rest_framework import viewsets, permissions
-from .models import Producto
-from .serializers import ProductoSerializer
-
+from rest_framework import viewsets
+from .models import Producto, Categoria
+from .serializers import ProductoSerializer, CategoriaSerializer
 
 class IsStaffOrSuper(permissions.BasePermission):
     """Allow access to staff or superusers."""
@@ -13,14 +10,15 @@ class IsStaffOrSuper(permissions.BasePermission):
 
 
 class ProductoViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.all().order_by('nombre')
+    queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
 
     def get_permissions(self):
         if self.action in ('create', 'update', 'partial_update', 'destroy'):
             permission_classes = [permissions.IsAuthenticated, IsStaffOrSuper]
         else:
-            permission_classes = [permissions.AllowAny]
-        return [perm() for perm in permission_classes]
+                return [perm() for perm in permission_classes]
 
-# Create your views here.
+class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer

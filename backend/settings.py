@@ -97,15 +97,23 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#   "default": {
+#     "ENGINE": "django.db.backends.postgresql",
+#     "NAME": env("PG_NAME", default="ecommercebd"), 
+#     "USER": env("PG_USER", default="postgres"),
+#     "PASSWORD": env("PG_PASS", default="1234"),
+#     "HOST": env("PG_HOST", default="localhost"),
+#     "PORT": env("PG_PORT", default="5432"),
+#   }
+# }
+
+# SQLite 
 DATABASES = {
-  "default": {
-    "ENGINE": "django.db.backends.postgresql",
-    "NAME": env("PG_NAME", default="ecommercebd"), 
-    "USER": env("PG_USER", default="postgres"),
-    "PASSWORD": env("PG_PASS", default="1234"),
-    "HOST": env("PG_HOST", default="localhost"),
-    "PORT": env("PG_PORT", default="5432"),
-  }
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
 # correo de desarrollo: imprime en consola

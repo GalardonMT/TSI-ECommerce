@@ -1,6 +1,10 @@
 from rest_framework import serializers
 from .models import Producto, ProductoImagen, Categoria
 
+class CategoriaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Categoria
+        fields = ["id_categoria", "nombre"]
 
 class ProductoImagenSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,12 +15,14 @@ class ProductoImagenSerializer(serializers.ModelSerializer):
 class ProductoSerializer(serializers.ModelSerializer):
     imagenes = ProductoImagenSerializer(many=True, required=False)
     categoria = serializers.PrimaryKeyRelatedField(queryset=Categoria.objects.all(), allow_null=True, required=False)
+    categoria_nombre = serializers.CharField(source='categoria.nombre', read_only=True)
 
     class Meta:
         model = Producto
         fields = [
             "id_producto",
             "categoria",
+            "categoria_nombre", 
             "nombre",
             "descripcion",
             "precio",
