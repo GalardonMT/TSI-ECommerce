@@ -17,7 +17,7 @@ function fmtPrice(v: number) {
 
 export default function AdminProductsList({ products }: Props) {
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<any[]>(products || []);
+  const [items, setItems] = useState<any[]>(Array.isArray(products) ? products : []);
   const [editing, setEditing] = useState<any | null>(null);
 
   return (

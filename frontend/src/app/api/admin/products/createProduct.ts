@@ -41,11 +41,13 @@ export async function createProduct(formData: FormData) {
     };
 
     try {
-        const res = await fetch(`${API_URL}/api/inventario/producto/`, {
+        // Call Next.js API route which handles auth via cookies
+        const res = await fetch('/api/admin/products', {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
+            credentials: 'include',
             body: JSON.stringify(body),
         });
 

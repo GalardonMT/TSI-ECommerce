@@ -14,8 +14,8 @@ export default function AdminLogin() {
     setError(null);
     setLoading(true);
     try {
-      const base = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${base}/api/auth/login/`, {
+      // Call server-side login API that sets HttpOnly cookies
+      const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ correo: email, password }),
@@ -26,17 +26,15 @@ export default function AdminLogin() {
         return;
       }
 
-      // persist minimal tokens + user in localStorage (if available)
-      try {
-        if (data?.access) localStorage.setItem('access', data.access);
-        if (data?.refresh) localStorage.setItem('refresh', data.refresh);
-        if (data?.user) localStorage.setItem('auth', JSON.stringify({ user: data.user }));
-      } catch (e) {
-        // ignore storage errors in restricted environments
+      if (!data.allowed) {
+        setError('No tienes permisos de administrador');
+        return;
       }
 
+      // Cookies are set server-side as HttpOnly - no localStorage needed
       router.push('/admin');
     } catch (err) {
+      console.error('Login error:', err);
       setError('Error de conexión con el servidor');
     } finally {
       setLoading(false);

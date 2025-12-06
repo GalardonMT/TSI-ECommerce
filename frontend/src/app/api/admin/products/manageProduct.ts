@@ -1,9 +1,10 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
 export async function deleteProduct(id: number | string) {
-  const url = `${API_URL.replace(/\/$/, '')}/api/inventario/producto/${id}/`;
   try {
-    const res = await fetch(url, { method: 'DELETE' });
+    // Call Next.js API route which handles auth via cookies
+    const res = await fetch(`/api/admin/products/${id}`, { 
+      method: 'DELETE',
+      credentials: 'include'
+    });
     if (!res.ok) return { ok: false, status: res.status };
     return { ok: true, status: res.status };
   } catch (err: any) {
@@ -12,11 +13,12 @@ export async function deleteProduct(id: number | string) {
 }
 
 export async function updateProduct(id: number | string, body: any) {
-  const url = `${API_URL.replace(/\/$/, '')}/api/inventario/producto/${id}/`;
   try {
-    const res = await fetch(url, {
+    // Call Next.js API route which handles auth via cookies
+    const res = await fetch(`/api/admin/products/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => null);

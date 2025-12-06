@@ -1,5 +1,7 @@
 "use server";
 
+import { backendUrl } from '@/lib/auth/serverTokens';
+
 type LoginResult = {
   ok: boolean;
   status: number;
@@ -11,7 +13,7 @@ type LoginResult = {
   allowed?: boolean;
 };
 
-const BACKEND = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || '';
+const BACKEND = backendUrl();
 
 /**
  * Attempts to authenticate against the backend and ensures the account has admin permissions.
@@ -21,7 +23,7 @@ const BACKEND = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || ''
  * or a role name that contains 'admin').
  */
 export default async function adminAuth(correo: string, password: string): Promise<LoginResult> {
-  const url = `${BACKEND.replace(/\/$/, '')}/api/auth/login/`;
+  const url = `${BACKEND}/api/auth/login/`;
 
   try {
     const res = await fetch(url, {
