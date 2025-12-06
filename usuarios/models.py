@@ -7,7 +7,16 @@ class CuentaManager(BaseUserManager):
     def create_user(self, correo, password=None, **extra_fields):
         if not correo:
             raise ValueError("El correo es obligatorio")
+        
         correo = self.normalize_email(correo)
+
+        if 'rol' not in extra_fields or extra_fields['rol'] is None:
+            try:
+                rol_cliente = Rol.objects.get(id_rol=1)
+            except Rol.DoesNotExist:
+                rol_cliente, _ = Rol.objects.get_or_create(nombre_rol="Cliente")
+            extra_fields['rol'] = rol_cliente
+
         user = self.model(correo=correo, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -57,11 +66,11 @@ class Direccion(models.Model):
 class Usuario(AbstractBaseUser, PermissionsMixin):
     correo = models.EmailField(unique=True) 
     nombre = models.CharField(max_length=100)
-    apellido_paterno = models.CharField(max_length=100, blank=True)
+    apellido_paterno = models.CharField(max_length=100)
     apellido_materno = models.CharField(max_length=100, blank=True)
-    rut = models.CharField(max_length=100, blank=True)
-    telefono = models.CharField(max_length=100, blank=True)
-    last_login = models.DateTimeField(blank=True, null=True)
+
+    rut = models.CharField(max_length=100)
+    telefono = models.CharField(max_length=100)
     
     rol = models.ForeignKey(
         Rol,
@@ -90,7 +99,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     # --- Configuración ---
     objects = CuentaManager() 
     USERNAME_FIELD = 'correo'
-    REQUIRED_FIELDS = ['nombre', 'apellido_paterno'] 
+    REQUIRED_FIELDS = ['nombre', 'apellido_paterno', 'rut', 'telefono'] 
 
     class Meta:
         db_table = 'USUARIO'

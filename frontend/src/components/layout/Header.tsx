@@ -9,7 +9,7 @@ export default function Header() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [loggingIn, setLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [openSearch, setOpenSearch] = useState(false);
@@ -25,6 +25,60 @@ export default function Header() {
   const [isStuck, setIsStuck] = useState(() => !isHome);
   const [cartOpen, setCartOpen] = useState(false);
   const cartRef = useRef<HTMLDivElement>(null);
+
+  // Helper to determine if a given user should be considered an 'Empleado'.
+  // Checks multiple possible shapes and also supports a comma-separated
+  // env var `NEXT_PUBLIC_EMPLEADO_EMAILS` for fallback matching by email or domain.
+  const userIsEmpleado = (u: any) => {
+    try {
+      if (!u) return false;
+      // Allow superusers/staff as well
+      if (u.is_superuser || u.is_staff) return true;
+      // normalize email for later checks
+      const email = (u.email || u.correo || '').toString().toLowerCase();
+
+      // If user has a 'rol' object with a name field
+      if (u.rol && typeof u.rol === 'object') {
+        const nombre = (u.rol.nombre_rol || u.rol.nombre || '').toString().toLowerCase();
+        if (nombre.includes('empleado')) return true;
+      }
+      // If 'rol' is a string
+      if (typeof u.rol === 'string' && u.rol.toLowerCase().includes('empleado')) return true;
+      // Common alternate field names
+      if (u.role && typeof u.role === 'string' && u.role.toLowerCase().includes('empleado')) return true;
+      if (u.role_name && typeof u.role_name === 'string' && u.role_name.toLowerCase().includes('empleado')) return true;
+      // Boolean flag fallback
+      if (u.is_empleado) return true;
+
+      // Fallback: check env var list of emails/domains
+      const raw = (process.env.NEXT_PUBLIC_EMPLEADO_EMAILS || '').toString();
+      if (raw) {
+        const items = raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+        if (email) {
+          for (const it of items) {
+            if (it.startsWith('@')) {
+              // domain match
+              if (email.endsWith(it)) return true;
+            } else if (it.includes('@')) {
+              // exact email match
+              if (email === it) return true;
+            } else {
+              // substring match
+              if (email.includes(it)) return true;
+            }
+          }
+        }
+      }
+
+      // Development fallback: consider specific emails as empleados (useful for local testing)
+      const devFallback = ['admin@admin.cl'];
+      if (email && devFallback.includes(email)) return true;
+
+      return false;
+    } catch (e) {
+      return false;
+    }
+  };
 
   // Detectar clic fuera
   useEffect(() => {
@@ -57,7 +111,10 @@ export default function Header() {
       const stored = localStorage.getItem('auth');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed?.user) setUser(parsed.user);
+        if (parsed?.user) {
+          const augmented = { ...parsed.user, is_empleado: userIsEmpleado(parsed.user) };
+          setUser(augmented);
+        }
       }
     } catch (e) {
       // ignore
@@ -76,6 +133,8 @@ export default function Header() {
       // ignore
     }
   }, [user]);
+
+  
 
   // Click outside for search box (ignore clicks on the search toggle button)
   useEffect(() => {
@@ -151,6 +210,8 @@ export default function Header() {
     return () => observer.disconnect();
   }, [isHome]);
 
+  
+
   return (
     <>
       {/* sentinel used to detect when the header reaches the top of the viewport */}
@@ -161,6 +222,7 @@ export default function Header() {
       <Link href="/" className="text-2xl font-bold tracking-wider font-Sansation whitespace-nowrap">
         PRO NANO CHILE
       </Link>
+      
       <div className="flex flex-1 flex-row justify-end items-center gap-4">
         {/* Centered Search (slides from top). Keep mounted for smooth close animation */}
         <div
@@ -238,6 +300,42 @@ export default function Header() {
                       <div className="space-y-3">
                         <div className="text-sm">Conectado como</div>
                         <div className="font-semibold">{user.email}</div>
+
+                        {/* Panel visible only to users with role 'Empleado' or when augmented flag exists */}
+                        {(user?.is_empleado || userIsEmpleado(user)) && (
+                          <div className="pt-2">
+                            <a
+                              href="http://localhost:3000/admin/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full block bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 text-center"
+                            >
+                              Panel de administración
+                            </a>
+                          </div>
+                        )}
+                        {/* Link to Pedidos (visible to any logged-in user) */}
+                        <div className="pt-2">
+                          <Link
+                            href="/pedidos"
+                            onClick={() => setOpen(false)}
+                            className="w-full block bg-gray-100 text-gray-800 py-2 rounded-md font-semibold hover:bg-gray-200 text-center"
+                          >
+                            Pedidos
+                          </Link>
+                        </div>
+                        {/* Link to perfil */}
+                        <div className="pt-2">
+                          <Link
+                            href="/perfil"
+                            onClick={() => setOpen(false)}
+                            className="w-full block bg-gray-100 text-gray-800 py-2 rounded-md font-semibold hover:bg-gray-200 text-center"
+                          >
+                            Perfil
+                          </Link>
+                        </div>
+
+
                         <div className="pt-2">
                           <button
                             type="button"
@@ -309,16 +407,18 @@ export default function Header() {
                               if (res.ok) {
                                 const data = await res.json();
                                 // Expect data.user or data.email. Adjust to your backend shape.
-                                    // If your Django view returns tokens (simplejwt -> access/refresh)
-                                    if (data.access || data.token || data.refresh) {
-                                      // store tokens (consider HttpOnly cookies for production)
-                                      if (data.access) localStorage.setItem('access', data.access);
-                                      if (data.refresh) localStorage.setItem('refresh', data.refresh);
-                                      if (data.token) localStorage.setItem('token', data.token);
-                                    }
+                                // If your Django view returns tokens (simplejwt -> access/refresh)
+                                if (data.access || data.token || data.refresh) {
+                                  // store tokens (consider HttpOnly cookies for production)
+                                  if (data.access) localStorage.setItem('access', data.access);
+                                  if (data.refresh) localStorage.setItem('refresh', data.refresh);
+                                  if (data.token) localStorage.setItem('token', data.token);
+                                }
 
-                                    // If backend returns user info, set it; otherwise fall back to email
-                                    setUser({ email: data.user?.correo ?? data.user?.email ?? data.email ?? email });
+                                // Prefer backend-provided user object (may include role fields)
+                                const returnedUser = data.user ?? (data.email ? { email: data.email } : { email });
+                                const augmentedUser = { ...returnedUser, is_empleado: userIsEmpleado(returnedUser) };
+                                setUser(augmentedUser);
                                 setOpen(false);
                               } else if (res.status === 401) {
                                 setLoginError('Email o contraseña incorrectos');
@@ -328,12 +428,13 @@ export default function Header() {
                                 const text = await res.text();
                                 setLoginError('Error al iniciar sesión: ' + (text || res.statusText));
                               }
-                            } catch (err) {
-                              // network error or API missing: fallback mock success for dev convenience
-                              // Remove this fallback in production
-                              console.warn('login request failed, using mock login', err);
-                              setUser({ email });
-                            } finally {
+                              } catch (err) {
+                                // network error or API missing: fallback mock success for dev convenience
+                                // Remove this fallback in production
+                                console.warn('login request failed, using mock login', err);
+                                const fallbackUser = { email, is_empleado: userIsEmpleado({ email }) };
+                                setUser(fallbackUser);
+                              } finally {
                               setLoggingIn(false);
                             }
                           }}
@@ -363,6 +464,9 @@ export default function Header() {
           )}
         </div>
         
+        {/* Visible Panel de administración (fuera del desplegable) para 'Empleado' */}
+        
+
         {/* Botón Carrito de compra*/}
         <button onClick={() => setCartOpen(true)} className="flex flex-row items-center justify-self-center">
             <div className="px-4 py-2">
