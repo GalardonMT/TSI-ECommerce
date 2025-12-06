@@ -84,6 +84,81 @@ class LoginAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+from rest_framework import viewsets
+from rest_framework import permissions as drf_permissions
+
+
+class IsSuperUser(drf_permissions.BasePermission):
+    """Allow access only to superusers."""
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.is_superuser)
+
+
+class IsStaffOrSuper(drf_permissions.BasePermission):
+    """Allow access to staff or superusers."""
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser))
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """A simple ViewSet for listing, creating and managing users.
+
+    - list/retrieve: allowed for staff or superusers
+    - create/update/destroy: allowed only for superusers
+    """
+    queryset = User.objects.all().order_by('id')
+
+    def get_serializer_class(self):
+        # Use RegisterSerializer for creation to allow password fields
+        if self.action == 'create':
+            return RegisterSerializer
+        return UserSerializer
+
+    def get_permissions(self):
+        if self.action in ('create', 'update', 'partial_update', 'destroy'):
+            permission_classes = [drf_permissions.IsAuthenticated, IsSuperUser]
+        else:
+            permission_classes = [drf_permissions.IsAuthenticated, IsStaffOrSuper]
+        return [perm() for perm in permission_classes]
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # bloquear modificación de la propia cuenta
+        if instance.pk == request.user.pk:
+            return Response({"detail": "No puedes modificar tu propia cuenta desde este panel."}, status=status.HTTP_403_FORBIDDEN)
+        serializer = self.get_serializer(instance, data=request.data, partial=False)
+        serializer.is_valid(raise_exception=True)
+        # bloquear convertir no-staff a staff o superuser
+        if not instance.is_staff and serializer.validated_data.get('is_staff'):
+            return Response({"detail": "No se permite convertir un usuario no-staff a staff."}, status=status.HTTP_400_BAD_REQUEST)
+        if not instance.is_staff and serializer.validated_data.get('is_superuser'):
+            return Response({"detail": "No se permite convertir un usuario no-staff a superuser."}, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_update(serializer)
+        return Response(UserSerializer(instance).data)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.pk == request.user.pk:
+            return Response({"detail": "No puedes modificar tu propia cuenta desde este panel."}, status=status.HTTP_403_FORBIDDEN)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        if not instance.is_staff and serializer.validated_data.get('is_staff'):
+            return Response({"detail": "No se permite convertir un usuario no-staff a staff."}, status=status.HTTP_400_BAD_REQUEST)
+        if not instance.is_staff and serializer.validated_data.get('is_superuser'):
+            return Response({"detail": "No se permite convertir un usuario no-staff a superuser."}, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_update(serializer)
+        return Response(UserSerializer(instance).data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.pk == request.user.pk:
+            return Response({"detail": "No puedes eliminar tu propia cuenta."}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
+
+
+
 class LogoutAPIView(APIView):
     """
     Logout: recibe { refresh } en body y lo blacklistea para invalidar futuros refresh.

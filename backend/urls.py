@@ -17,13 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from usuarios.views import RegisterView, me
+from usuarios.views import RegisterView, me, LoginAPIView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     # auth
     path("api/auth/register/", RegisterView.as_view()),
-    path("api/auth/login/", TokenObtainPairView.as_view()),    # envia correo y password
+    path("api/auth/login/", LoginAPIView.as_view()),    # Custom login with user data
     path("api/auth/refresh/", TokenRefreshView.as_view()),
     path("api/auth/me/", me),
     path('api/usuarios/', include('usuarios.urls')),

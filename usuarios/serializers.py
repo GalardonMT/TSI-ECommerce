@@ -47,12 +47,16 @@ class RegisterSerializer(serializers.ModelSerializer):
     password_confirm = serializers.CharField(write_only=True)
     id_rol = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     direccion = DireccionSerializer(write_only=True, required=False, allow_null=True)
+    # Flags opcionales para creación vía admin (superuser); ignorados en registro público.
+    is_staff = serializers.BooleanField(write_only=True, required=False)
+    is_superuser = serializers.BooleanField(write_only=True, required=False)
 
     class Meta:
         model = User
         fields = [
             "id", "correo", "nombre", "apellido_paterno", "apellido_materno",
-            "rut", "telefono", "password", "password_confirm", "id_rol", "direccion"
+            "rut", "telefono", "password", "password_confirm", "id_rol", "direccion",
+            "is_staff", "is_superuser"
         ]
         read_only_fields = ["id"]
 
@@ -71,6 +75,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         validated_data.pop("password_confirm", None)
         id_rol = validated_data.pop("id_rol", None)
         direccion_data = validated_data.pop("direccion", None)
+        staff_flag = bool(validated_data.pop("is_staff", False))
+        super_flag = bool(validated_data.pop("is_superuser", False))
 
         user = User(**validated_data)
 
@@ -87,6 +93,25 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         user.set_password(password)
         user.save()
+
+        # Si la creación la hace un superuser (vía admin), aplicar flags explícitos sin forzar staff.
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated and request.user.is_superuser:
+            update_fields = []
+            if staff_flag:
+                user.is_staff = True
+                update_fields.append("is_staff")
+            if super_flag:
+                user.is_superuser = True
+                # superuser implica staff
+                if not user.is_staff:
+                    user.is_staff = True
+                    if "is_staff" not in update_fields:
+                        update_fields.append("is_staff")
+                update_fields.append("is_superuser")
+            if update_fields:
+                user.save(update_fields=update_fields)
+        # Registro público: se ignoran flags aunque vengan manipulados.
         return user
 
 
