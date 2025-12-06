@@ -10,6 +10,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveField(
+            model_name='direccion',
+            name='referencia',
+        ),
         migrations.AlterField(
             model_name='usuario',
             name='last_login',

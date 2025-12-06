@@ -158,9 +158,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         if id_rol:
             try:
                 rol = Rol.objects.get(id_rol=id_rol)
-                extra_fields['rol'] = rol
+                user.rol = rol
             except Rol.DoesNotExist:
-                pass
+                raise serializers.ValidationError({"id_rol": "El rol especificado no existe."})
 
         if direccion_data:
             direccion = Direccion.objects.create(**direccion_data)

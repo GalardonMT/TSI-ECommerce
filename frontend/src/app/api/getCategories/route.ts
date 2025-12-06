@@ -5,7 +5,7 @@ const BACKEND = backendUrl();
 
 export async function GET() {
   try {
-    const response = await fetch(`${BACKEND}/api/inventario/producto/`, { cache: "no-store" });
+    const response = await fetch(`${BACKEND}/api/inventario/categoria/`, { cache: "no-store" });
     const data = await response.json().catch(() => null);
     return NextResponse.json(data, { status: response.status });
   } catch (error) {

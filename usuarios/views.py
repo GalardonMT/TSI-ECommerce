@@ -1,6 +1,7 @@
 # usuarios/views.py
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
@@ -13,15 +14,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from django.db import IntegrityError
 
-from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
-from rest_framework.permissions import IsAuthenticated
-from .serializers import UpdateUserSerializer
+from .serializers import (
+    RegisterSerializer,
+    UserSerializer,
+    LoginSerializer,
+    UpdateUserSerializer,
+    get_tokens_for_user,
+)
 
 User = get_user_model()
-
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-    return {"refresh": str(refresh), "access": str(refresh.access_token)}
 
 class PerfilUpdateAPIView(APIView):
     permission_classes = [IsAuthenticated]

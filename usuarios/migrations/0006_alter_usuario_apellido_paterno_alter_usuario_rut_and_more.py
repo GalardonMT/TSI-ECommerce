@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('usuarios', '0005_remove_direccion_referencia'),
+        ('usuarios', '0005_remove_direccion_referencia_alter_usuario_last_login'),
     ]
 
     operations = [
