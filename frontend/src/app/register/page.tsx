@@ -115,40 +115,88 @@ export default function Register() {
           <div className="flex flex-col gap-4 px-4 text-zinc-600">
             <h2 className="text-xl text-black mb-1">Datos de usuario</h2>
             <div>
-              <label className="block mb-1">Nombre</label>
-              <input value={nombre} onChange={(e) => setNombre(e.target.value)} type="text" className="w-full border border-gray-300 rounded-md p-2" />
+              <label className="block mb-1">Nombre (Obligatorio)</label>
+              <input
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                type="text"
+                className="w-full border border-gray-300 rounded-md p-2"
+                placeholder="Juan"
+              />
             </div>
 
             <div>
-              <label className="block mb-1">Apellido paterno</label>
-              <input value={apellidoP} onChange={(e) => setApellidoP(e.target.value)} type="text" className="w-full border border-gray-300 rounded-md p-2" />
+              <label className="block mb-1">Apellido paterno (Obligatorio)</label>
+              <input
+                value={apellidoP}
+                onChange={(e) => setApellidoP(e.target.value)}
+                type="text"
+                className="w-full border border-gray-300 rounded-md p-2"
+                placeholder="Pérez"
+              />
             </div>
 
             <div>
               <label className="block mb-1">Apellido materno</label>
-              <input value={apellidoM} onChange={(e) => setApellidoM(e.target.value)} type="text" className="w-full border border-gray-300 rounded-md p-2" />
+              <input
+                value={apellidoM}
+                onChange={(e) => setApellidoM(e.target.value)}
+                type="text"
+                className="w-full border border-gray-300 rounded-md p-2"
+                placeholder="González"
+              />
             </div>
 
             <div>
-              <label className="block mb-1">RUT</label>
-              <input value={rut} onChange={(e) => setRut(e.target.value)} type="text" className="w-full border border-gray-300 rounded-md p-2" />
+              <label className="block mb-1">RUT (Obligatorio)</label>
+              <input
+                value={rut}
+                onChange={(e) => setRut(e.target.value)}
+                type="text"
+                className="w-full border border-gray-300 rounded-md p-2"
+                placeholder="12345678-9"
+              />
             </div>
 
             <div>
-              <label className="block mb-1">Email</label>
-              <input value={correo} onChange={(e) => setCorreo(e.target.value)} type="email" className="w-full border border-gray-300 rounded-md p-2" />
+              <label className="block mb-1">Email (Obligatorio)</label>
+              <input
+                value={correo}
+                onChange={(e) => setCorreo(e.target.value)}
+                type="email"
+                className="w-full border border-gray-300 rounded-md p-2"
+                placeholder="correo@gmail.com"
+              />
             </div>
 
             <div>
-              <label className="block mb-1">Teléfono</label>
-              <input value={telefono} onChange={(e) => setTelefono(e.target.value)} type="text" className="w-full border border-gray-300 rounded-md p-2" />
+              <label className="block mb-1">Teléfono (Obligatorio)</label>
+              <input
+                value={telefono}
+                onChange={(e) => setTelefono(e.target.value)}
+                type="text"
+                className="w-full border border-gray-300 rounded-md p-2"
+                placeholder="+56912345678"
+              />
             </div>
 
             <div className="py-4">
-              <label className="block mb-1">Contraseña</label>
-              <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" className="w-full border border-gray-300 rounded-md p-2 mb-4" />
-              <label className="block mb-1">Confirmar contraseña</label>
-              <input value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} type="password" className="w-full border border-gray-300 rounded-md p-2" />
+              <label className="block mb-1">Contraseña (Obligatorio)</label>
+              <input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type="password"
+                className="w-full border border-gray-300 rounded-md p-2 mb-4"
+                placeholder="Mínimo 8 caracteres"
+              />
+              <label className="block mb-1">Confirmar contraseña (Obligatorio)</label>
+              <input
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                type="password"
+                className="w-full border border-gray-300 rounded-md p-2"
+                placeholder="Repite la contraseña"
+              />
             </div>
           </div>
 
@@ -174,17 +222,35 @@ export default function Register() {
 
             <div>
               <label className="block mb-1">Calle</label>
-              <input value={calle} onChange={(e) => setCalle(e.target.value)} type="text" className="w-full border border-gray-300 rounded-md p-2" />
+              <input
+                value={calle}
+                onChange={(e) => setCalle(e.target.value)}
+                type="text"
+                className="w-full border border-gray-300 rounded-md p-2"
+                placeholder="Av. Siempre Viva"
+              />
             </div>
 
             <div>
               <label className="block mb-1">Numero</label>
-              <input value={numero} onChange={(e) => setNumero(e.target.value)} type="text" className="w-full border border-gray-300 rounded-md p-2" />
+              <input
+                value={numero}
+                onChange={(e) => setNumero(e.target.value)}
+                type="text"
+                className="w-full border border-gray-300 rounded-md p-2"
+                placeholder="1234"
+              />
             </div>
 
             <div>
               <label className="block mb-1">N° depto / oficina / otro</label>
-              <input value={depto} onChange={(e) => setDepto(e.target.value)} type="text" className="w-full border border-gray-300 rounded-md p-2" />
+              <input
+                value={depto}
+                onChange={(e) => setDepto(e.target.value)}
+                type="text"
+                className="w-full border border-gray-300 rounded-md p-2"
+                placeholder="Depto 403"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-2 mt-15">
