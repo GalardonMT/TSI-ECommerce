@@ -54,3 +54,57 @@ export async function POST(request: NextRequest) {
   const data = await backendResponse.json().catch(() => null);
   return NextResponse.json(data, { status: backendResponse.status });
 }
+
+export async function PUT(request: NextRequest) {
+  const user = await getUserFromHeaders(request.headers);
+  if (!user) {
+    return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
+  }
+
+  const accessToken = (user as any).access as string | undefined;
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== 'object') {
+    return NextResponse.json({ detail: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const backendResponse = await fetch(`${BACKEND}/api/ventas/carrito/`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  const data = await backendResponse.json().catch(() => null);
+  return NextResponse.json(data, { status: backendResponse.status });
+}
+
+export async function DELETE(request: NextRequest) {
+  const user = await getUserFromHeaders(request.headers);
+  if (!user) {
+    return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
+  }
+
+  const accessToken = (user as any).access as string | undefined;
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== 'object') {
+    return NextResponse.json({ detail: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const backendResponse = await fetch(`${BACKEND}/api/ventas/carrito/`, {
+    method: "DELETE",
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  const data = await backendResponse.json().catch(() => null);
+  return NextResponse.json(data, { status: backendResponse.status });
+}
