@@ -42,7 +42,20 @@ export default function ProductCard({ product, onRemove, onChangeQty, stockDispo
             >
               -
             </button>
-            <div className="px-4 py-1 bg-white">{product.qty}</div>
+            <input
+              type="number"
+              min={1}
+              className="w-16 px-2 py-1 bg-white text-center outline-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
+              value={product.qty}
+              onChange={(e) => {
+                const raw = e.target.value;
+                const parsed = parseInt(raw, 10);
+                if (Number.isNaN(parsed)) {
+                  return;
+                }
+                onChangeQty(product.id, parsed);
+              }}
+            />
             <button
               aria-label={`Aumentar cantidad de ${product.name}`}
               onClick={() => onChangeQty(product.id, product.qty + 1)}

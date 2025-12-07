@@ -103,6 +103,19 @@ export default function HeaderCartDrawer({ open, onClose }: HeaderCartDrawerProp
     const item = items.find((p) => p.id === id);
     if (!item) return;
 
+    // normalizar cantidad mínima
+    if (qty <= 0) {
+      qty = 0;
+    }
+
+    const maxTotal =
+      typeof item.stock_disponible === "number"
+        ? item.cantidad + item.stock_disponible
+        : undefined;
+    if (maxTotal != null && qty > maxTotal) {
+      qty = maxTotal; // ajustar al máximo permitido
+    }
+
     if (qty <= 0) {
       setItems((s) => s.filter((p) => p.id !== id));
     } else {

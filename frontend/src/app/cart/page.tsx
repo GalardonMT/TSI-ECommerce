@@ -78,13 +78,18 @@ export default function Cart() {
     const item = items.find((p) => p.id === id);
     if (!item) return;
 
+    // normalizar cantidad mínima
+    if (qty <= 0) {
+      qty = 0;
+    }
+
     // límite por stock (si se conoce): cantidad actual + lo que queda en bodega
     const maxTotal =
       typeof item.stock_disponible === 'number'
         ? item.cantidad + item.stock_disponible
         : undefined;
     if (maxTotal != null && qty > maxTotal) {
-      return; // no avanzar más allá del total posible
+      qty = maxTotal; // si excede, ajustar al máximo permitido
     }
 
     if (qty <= 0) {
