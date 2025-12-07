@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { addCartItem } from "@/app/api/cart/addItem";
 // import { productsData } from "@/data/products"; // <--- YA NO USAMOS ESTO
 
 // Definimos el tipo de datos que esperamos usar en tu diseño
@@ -25,7 +26,28 @@ export default function ProductDetailPage() {
   // ESTADOS
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"description" | "shipping">("description");
+
+  const handleAddToCart = async () => {
+    if (!product) return;
+    setAddError(null);
+    setAdding(true);
+    try {
+      const resp = await addCartItem(product.id, 1);
+      if (!resp.ok) {
+        const detail = resp.data?.detail || "No se pudo agregar al carrito";
+        setAddError(detail);
+      } else {
+        setProduct((prev) => (prev ? { ...prev, stock: Math.max(0, prev.stock - 1) } : prev));
+      }
+    } catch (err) {
+      setAddError("Error de conexión al agregar al carrito");
+    } finally {
+      setAdding(false);
+    }
+  };
 
   // EFECTO: PEDIR DATOS A DJANGO
   useEffect(() => {
@@ -153,8 +175,15 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="space-y-3">
-            <button className="w-full py-3 px-6 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-              Agregar al carro
+            {addError && (
+              <p className="text-sm text-red-600 mb-1">{addError}</p>
+            )}
+            <button
+              disabled={adding || product.stock <= 0}
+              onClick={handleAddToCart}
+              className="w-full py-3 px-6 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
+            >
+              {adding ? "Agregando..." : product.stock <= 0 ? "Sin stock" : "Agregar al carro"}
             </button>
             <button className="w-full py-3 px-6 bg-black text-white rounded-md font-medium hover:bg-gray-800 transition-colors shadow-sm">
               Comprar ahora

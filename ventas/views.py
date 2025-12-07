@@ -27,10 +27,13 @@ class CarritoView(APIView):
     # Agregar producto / actualizar cantidad
     def post(self, request):
         producto_id = request.data.get("producto_id")
-        cantidad = request.data.get("cantidad", 1)
+        cantidad = int(request.data.get("cantidad", 1) or 1)
 
         reserva = self.get_carrito(request.user)
         producto = Producto.objects.get(id_producto=producto_id)
+
+        if producto.stock_disponible < cantidad:
+            return Response({"detail": "Stock insuficiente"}, status=status.HTTP_400_BAD_REQUEST)
 
         detalle, created = DetalleReserva.objects.get_or_create(
             reserva=reserva,
@@ -45,6 +48,10 @@ class CarritoView(APIView):
             detalle.cantidad += cantidad
             detalle.save()
 
+        # Descontar stock del producto
+        producto.stock_disponible -= cantidad
+        producto.save(update_fields=["stock_disponible"])
+
         return Response({"message": "Producto agregado"}, status=200)
 
     # Editar cantidad
@@ -55,12 +62,27 @@ class CarritoView(APIView):
         reserva = self.get_carrito(request.user)
         detalle = DetalleReserva.objects.get(reserva=reserva, producto_id=producto_id)
 
+        # Calcular diferencia para ajustar stock
+        diferencia = cantidad - detalle.cantidad
+
         if cantidad <= 0:
+            # devolver todo el stock al producto
+            producto = detalle.producto
+            producto.stock_disponible += detalle.cantidad
+            producto.save(update_fields=["stock_disponible"])
             detalle.delete()
             return Response({"message": "Producto eliminado"})
 
+        # Si aumenta cantidad, verificar stock
+        producto = detalle.producto
+        if diferencia > 0 and producto.stock_disponible < diferencia:
+            return Response({"detail": "Stock insuficiente"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Actualizar detalle y stock
         detalle.cantidad = cantidad
         detalle.save()
+        producto.stock_disponible -= diferencia
+        producto.save(update_fields=["stock_disponible"])
 
         return Response({"message": "Cantidad actualizada"})
 
@@ -70,6 +92,12 @@ class CarritoView(APIView):
 
         reserva = self.get_carrito(request.user)
         detalle = DetalleReserva.objects.get(reserva=reserva, producto_id=producto_id)
+
+        # Devolver stock al producto al eliminar del carrito
+        producto = detalle.producto
+        producto.stock_disponible += detalle.cantidad
+        producto.save(update_fields=["stock_disponible"])
+
         detalle.delete()
 
         return Response({"message": "Producto eliminado"})

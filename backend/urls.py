@@ -26,8 +26,8 @@ urlpatterns = [
     path("api/auth/login/", LoginAPIView.as_view()),    # Custom login with user data
     path("api/auth/refresh/", TokenRefreshView.as_view()),
     path("api/auth/me/", me),
-    path('api/usuarios/', include('usuarios.urls')),
-    path('api/inventario/', include('inventario.urls')),
-    path("usuarios/", include("usuarios.urls")),
+    path("api/usuarios/", include("usuarios.urls")),
+    path("api/inventario/", include("inventario.urls")),
+    path("api/ventas/", include("ventas.urls")),
 
 ]
