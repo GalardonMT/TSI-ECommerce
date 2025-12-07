@@ -6,14 +6,15 @@ import { createProduct } from '@/app/api/admin/products/createProduct';
 type Props = {
   onClose?: () => void;
   onCreated?: (data: any) => void;
+  categories: { id_categoria: number; nombre: string }[];
 };
 
-export default function ModalCreateProduct({ onClose, onCreated }: Props) {
+export default function ModalCreateProduct({ onClose, onCreated, categories }: Props) {
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [precio, setPrecio] = useState<number | ''>('');
   const [stock, setStock] = useState<number | ''>('');
-  const [categoria, setCategoria] = useState<number | ''>('');
+  const [categoria, setCategoria] = useState<string>('');
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +27,7 @@ export default function ModalCreateProduct({ onClose, onCreated }: Props) {
       return;
     }
     const formData = new FormData();
-    if (categoria !== '') formData.append('categoria', String(categoria));
+    if (categoria !== '') formData.append('categoria', categoria);
     formData.append('nombre', nombre);
     formData.append('descripcion', descripcion);
     formData.append('precio', String(precio));
@@ -88,8 +89,19 @@ export default function ModalCreateProduct({ onClose, onCreated }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm mb-1">Categoría (id)</label>
-            <input value={categoria} onChange={(e) => setCategoria(e.target.value === '' ? '' : Number(e.target.value))} type="number" className="w-full border p-2 rounded" />
+            <label className="block text-sm mb-1">Categoría</label>
+            <select
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              className="w-full border p-2 rounded bg-white"
+            >
+              <option value="">Sin categoría</option>
+              {categories.map((cat) => (
+                <option key={cat.id_categoria} value={String(cat.id_categoria)}>
+                  {cat.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

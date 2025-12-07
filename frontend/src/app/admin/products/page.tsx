@@ -12,21 +12,21 @@ export default async function AdminProductsPage() {
     if (!auth?.user) redirect('/admin/login');
 
     const API_BASE = backendUrl();
-    const url = `${API_BASE}/api/inventario/producto`;
-    let products: any[] = [];
-    try {
-        const res = await fetch(url, { cache: 'no-store' });
-        if (res.ok) products = await res.json();
-    } catch (e) {
-        console.error(e);
-    }
+    const [products, categories] = await Promise.all([
+        fetch(`${API_BASE}/api/inventario/producto`, { cache: 'no-store' })
+            .then(async (res) => (res.ok ? res.json() : []))
+            .catch(() => []),
+        fetch(`${API_BASE}/api/inventario/categoria/`, { cache: 'no-store' })
+            .then(async (res) => (res.ok ? res.json() : []))
+            .catch(() => []),
+    ]);
 
     return (
         <div className="p-8">
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-bold">Admin — Productos</h1>
             </div>
-            <AdminProductsList products={products} />
+            <AdminProductsList products={products} categories={categories} />
         </div>
     );
 }

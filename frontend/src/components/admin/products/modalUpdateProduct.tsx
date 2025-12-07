@@ -9,6 +9,7 @@ type Props = {
   product: any;
   onClose?: () => void;
   onUpdated?: (data: any) => void;
+  categories: { id_categoria: number; nombre: string }[];
 };
 
 const fileToDataUrl = (f: File) =>
@@ -19,12 +20,14 @@ const fileToDataUrl = (f: File) =>
     reader.readAsDataURL(f);
   });
 
-export default function ModalUpdateProduct({ product, onClose, onUpdated }: Props) {
+export default function ModalUpdateProduct({ product, onClose, onUpdated, categories }: Props) {
   const [nombre, setNombre] = useState(product?.nombre || '');
   const [descripcion, setDescripcion] = useState(product?.descripcion || '');
   const [precio, setPrecio] = useState<number | ''>(product?.precio ?? '');
   const [stock, setStock] = useState<number | ''>(product?.stock_disponible ?? product?.stock ?? '');
-  const [categoria, setCategoria] = useState<number | ''>(product?.categoria ?? '');
+  const [categoria, setCategoria] = useState<string>(
+    product?.categoria ? String(product.categoria) : ''
+  );
   const [existing, setExisting] = useState<Imagen[]>(product?.imagenes ? product.imagenes.slice() : []);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -110,8 +113,19 @@ export default function ModalUpdateProduct({ product, onClose, onUpdated }: Prop
             </div>
           </div>
           <div>
-            <label className="block text-sm mb-1">Categoría (id)</label>
-            <input value={categoria} onChange={(e) => setCategoria(e.target.value === '' ? '' : Number(e.target.value))} type="number" className="w-full border p-2 rounded" />
+            <label className="block text-sm mb-1">Categoría</label>
+            <select
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              className="w-full border p-2 rounded bg-white"
+            >
+              <option value="">Sin categoría</option>
+              {categories.map((cat) => (
+                <option key={cat.id_categoria} value={String(cat.id_categoria)}>
+                  {cat.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

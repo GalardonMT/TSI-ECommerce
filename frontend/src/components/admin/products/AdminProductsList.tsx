@@ -3,9 +3,15 @@
 import { useState } from 'react';
 import ModalCreateProduct from './modalCreateProduct';
 import ModalUpdateProduct from './modalUpdateProduct';
+import ModalCreateCategory from './modalCreateCategory';
 import { deleteProduct } from '@/app/api/admin/products/manageProduct';
 
-type Props = { products: any[] };
+type Category = {
+  id_categoria: number;
+  nombre: string;
+};
+
+type Props = { products: any[]; categories: Category[] };
 
 function fmtPrice(v: number) {
   try {
@@ -15,8 +21,9 @@ function fmtPrice(v: number) {
   }
 }
 
-export default function AdminProductsList({ products }: Props) {
+export default function AdminProductsList({ products, categories }: Props) {
   const [open, setOpen] = useState(false);
+  const [openCategory, setOpenCategory] = useState(false);
   const [items, setItems] = useState<any[]>(Array.isArray(products) ? products : []);
   const [editing, setEditing] = useState<any | null>(null);
 
@@ -24,7 +31,10 @@ export default function AdminProductsList({ products }: Props) {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Listado de productos</h2>
-        <button onClick={() => setOpen(true)} className="bg-black text-white px-3 py-2 rounded text-sm">Crear producto</button>
+        <div className="flex gap-2">
+          <button onClick={() => setOpenCategory(true)} className="border px-3 py-2 rounded text-sm">Crear categoría</button>
+          <button onClick={() => setOpen(true)} className="bg-black text-white px-3 py-2 rounded text-sm">Crear producto</button>
+        </div>
       </div>
 
       <div className="overflow-x-auto bg-white border rounded">
@@ -35,6 +45,7 @@ export default function AdminProductsList({ products }: Props) {
               <th className="p-3 w-32">Imagen</th>
               <th className="p-3">Nombre</th>
               <th className="p-3">Descripción</th>
+              <th className="p-3 w-40">Categoría</th>
               <th className="p-3 w-28">Precio</th>
               <th className="p-3 w-24">Stock</th>
             </tr>
@@ -57,6 +68,7 @@ export default function AdminProductsList({ products }: Props) {
                   </td>
                   <td className="p-3 align-top">{p.nombre}</td>
                   <td className="p-3 align-top text-sm text-gray-700">{p.descripcion}</td>
+                  <td className="p-3 align-top text-sm text-gray-700">{p.categoria_nombre || 'Sin categoría'}</td>
                   <td className="p-3 align-top">{fmtPrice(Number(p.precio || 0))}</td>
                   <td className="p-3 align-top">{p.stock_disponible ?? p.stock ?? 0}</td>
                   <td className="p-3 align-top">
@@ -95,6 +107,14 @@ export default function AdminProductsList({ products }: Props) {
             if (data) setItems((s) => [data, ...s]);
             setOpen(false);
           }}
+          categories={categories}
+        />
+      )}
+
+      {openCategory && (
+        <ModalCreateCategory
+          onClose={() => setOpenCategory(false)}
+          onCreated={() => setOpenCategory(false)}
         />
       )}
 
@@ -106,6 +126,7 @@ export default function AdminProductsList({ products }: Props) {
             if (data) setItems((s) => s.map((it) => ((it.id || it.id_producto) === (data.id || data.id_producto) ? data : it)));
             setEditing(null);
           }}
+          categories={categories}
         />
       )}
     </div>
