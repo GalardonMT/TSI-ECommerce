@@ -172,7 +172,7 @@ export default function Cart() {
                   {/*Configurar costos de envio: Pendiente*/}
                   <div>Envio: 5000</div>
                 <button
-                onClick={() => router.push('/checkout')}
+                onClick={() => router.push('/cart/checkout')}
                 className="mt-18 w-full bg-black text-white py-2 rounded bottom-5 inset-x-0"
                 >
                 Ir a Checkout

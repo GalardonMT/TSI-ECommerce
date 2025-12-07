@@ -206,10 +206,17 @@ export default function PerfilPage() {
     }
   };
 
-  if (loading) return <div className="p-6 text-center">Cargando perfil...</div>;
+  if (loading)
+    return (
+      <section className="max-w-3xl mx-auto p-6 pt-24">
+        <div className="bg-white shadow-md rounded-lg p-6 text-center text-gray-600">
+          Cargando perfil...
+        </div>
+      </section>
+    );
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <section className="max-w-3xl mx-auto p-6 pt-24">
       <div className="bg-white shadow-md rounded-lg p-6">
         <h1 className="text-2xl font-semibold mb-4">Editar Perfil</h1>
 
@@ -314,6 +321,6 @@ export default function PerfilPage() {
           <button onClick={() => router.push('/')} className="px-4 py-2 border rounded">Cancelar</button>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

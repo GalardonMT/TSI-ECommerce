@@ -22,7 +22,14 @@ class DetalleReservaSerializer(serializers.ModelSerializer):
 
 class ReservaSerializer(serializers.ModelSerializer):
     detalles = DetalleReservaSerializer(many=True, read_only=True)
+    correo_usuario = serializers.SerializerMethodField()
 
     class Meta:
         model = Reserva
-        fields = ['id_reserva', 'fecha_creacion', 'estado', 'detalles']
+        fields = ['id_reserva', 'fecha_creacion', 'fecha_reserva', 'estado', 'correo_usuario', 'detalles']
+
+    def get_correo_usuario(self, obj):
+        usuario = getattr(obj, "usuario", None)
+        if not usuario:
+            return None
+        return getattr(usuario, "correo", None) or getattr(usuario, "email", None)

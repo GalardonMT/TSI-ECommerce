@@ -48,3 +48,19 @@ export async function removeCartItem(productoId: number) {
     return { ok: false, status: 0, data: null };
   }
 }
+
+export async function confirmCart() {
+  try {
+    const res = await fetch('/api/cart', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+
+    const data = await res.json().catch(() => null);
+    return { ok: res.ok, status: res.status, data };
+  } catch (error: any) {
+    console.error('Error confirmando el carrito:', error);
+    return { ok: false, status: 0, data: null };
+  }
+}
