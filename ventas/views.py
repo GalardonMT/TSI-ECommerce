@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
+from rest_framework import status, viewsets, permissions
 from .models import Reserva, DetalleReserva
 from inventario.models import Producto
 from .serializers import ReservaSerializer
@@ -101,3 +101,24 @@ class CarritoView(APIView):
         detalle.delete()
 
         return Response({"message": "Producto eliminado"})
+
+
+class IsStaffOrSuper(permissions.BasePermission):
+    """Allow access to staff or superusers."""
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and (request.user.is_staff or request.user.is_superuser)
+        )
+
+
+class ReservaAdminViewSet(viewsets.ModelViewSet):
+    queryset = Reserva.objects.all().order_by("-fecha_reserva")
+    serializer_class = ReservaSerializer
+
+    def get_permissions(self):
+        # Only staff/superusers can see or modify reservas via admin
+        permission_classes = [IsStaffOrSuper]
+        return [perm() for perm in permission_classes]
