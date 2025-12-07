@@ -4,6 +4,7 @@ import { useState } from 'react';
 import ModalCreateProduct from './modalCreateProduct';
 import ModalUpdateProduct from './modalUpdateProduct';
 import ModalCreateCategory from './modalCreateCategory';
+import ModalDeleteCategory from './modalDeleteCategory';
 import { deleteProduct } from '@/app/api/admin/products/manageProduct';
 
 type Category = {
@@ -24,7 +25,9 @@ function fmtPrice(v: number) {
 export default function AdminProductsList({ products, categories }: Props) {
   const [open, setOpen] = useState(false);
   const [openCategory, setOpenCategory] = useState(false);
+  const [openDeleteCategory, setOpenDeleteCategory] = useState(false);
   const [items, setItems] = useState<any[]>(Array.isArray(products) ? products : []);
+  const [categoryList, setCategoryList] = useState<Category[]>(Array.isArray(categories) ? categories : []);
   const [editing, setEditing] = useState<any | null>(null);
 
   return (
@@ -33,6 +36,13 @@ export default function AdminProductsList({ products, categories }: Props) {
         <h2 className="text-lg font-semibold">Listado de productos</h2>
         <div className="flex gap-2">
           <button onClick={() => setOpenCategory(true)} className="border px-3 py-2 rounded text-sm">Crear categoría</button>
+          <button
+            onClick={() => setOpenDeleteCategory(true)}
+            className="border border-red-600 text-red-600 px-3 py-2 rounded text-sm disabled:opacity-50"
+            disabled={categoryList.length === 0}
+          >
+            Eliminar categoría
+          </button>
           <button onClick={() => setOpen(true)} className="bg-black text-white px-3 py-2 rounded text-sm">Crear producto</button>
         </div>
       </div>
@@ -107,14 +117,60 @@ export default function AdminProductsList({ products, categories }: Props) {
             if (data) setItems((s) => [data, ...s]);
             setOpen(false);
           }}
-          categories={categories}
+          categories={categoryList}
         />
       )}
 
       {openCategory && (
         <ModalCreateCategory
           onClose={() => setOpenCategory(false)}
-          onCreated={() => setOpenCategory(false)}
+          onCreated={(data) => {
+            if (data) {
+              const normalizedId = data.id_categoria ?? data.id ?? data.pk;
+              const normalizedName = data.nombre ?? data.name ?? '';
+              if (normalizedId) {
+                setCategoryList((prev) => {
+                  const exists = prev.some((cat) => cat.id_categoria === normalizedId);
+                  if (exists) {
+                    return prev.map((cat) =>
+                      cat.id_categoria === normalizedId ? { ...cat, nombre: normalizedName || cat.nombre } : cat
+                    );
+                  }
+                  return [{ id_categoria: normalizedId, nombre: normalizedName || `Categoría ${normalizedId}` }, ...prev];
+                });
+              }
+            }
+            setOpenCategory(false);
+          }}
+        />
+      )}
+
+      {openDeleteCategory && (
+        <ModalDeleteCategory
+          categories={categoryList}
+          onClose={() => setOpenDeleteCategory(false)}
+          onDeleted={(id) => {
+            setCategoryList((prev) => prev.filter((cat) => cat.id_categoria !== id));
+            setItems((prev) =>
+              prev.map((product) => {
+                const productCategoryId =
+                  product.categoria ??
+                  product.id_categoria ??
+                  product.categoria_id ??
+                  product.categoriaId ??
+                  product.category_id;
+                if (productCategoryId && Number(productCategoryId) === Number(id)) {
+                  return {
+                    ...product,
+                    categoria: null,
+                    categoria_nombre: 'Sin categoría',
+                  };
+                }
+                return product;
+              })
+            );
+            setOpenDeleteCategory(false);
+          }}
         />
       )}
 
@@ -126,7 +182,7 @@ export default function AdminProductsList({ products, categories }: Props) {
             if (data) setItems((s) => s.map((it) => ((it.id || it.id_producto) === (data.id || data.id_producto) ? data : it)));
             setEditing(null);
           }}
-          categories={categories}
+          categories={categoryList}
         />
       )}
     </div>

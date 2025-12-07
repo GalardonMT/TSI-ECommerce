@@ -19,6 +19,4 @@ urlpatterns = [
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 
-urlpatterns += [
-    path("usuarios/", include(router.urls)),
-]
+urlpatterns += router.urls
