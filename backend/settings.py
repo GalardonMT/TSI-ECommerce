@@ -48,19 +48,20 @@ INSTALLED_APPS = [
     'usuarios',
     'inventario',
     'ventas',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "django.middleware.locale.LocaleMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -96,15 +97,23 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#   "default": {
+#     "ENGINE": "django.db.backends.postgresql",
+#     "NAME": env("PG_NAME", default="ecommercebd"), 
+#     "USER": env("PG_USER", default="postgres"),
+#     "PASSWORD": env("PG_PASS", default="1234"),
+#     "HOST": env("PG_HOST", default="localhost"),
+#     "PORT": env("PG_PORT", default="5432"),
+#   }
+# }
+
+# SQLite 
 DATABASES = {
-  "default": {
-    "ENGINE": "django.db.backends.postgresql",
-    "NAME": env("PG_NAME", default="ecommercebd"), 
-    "USER": env("PG_USER", default="postgres"),
-    "PASSWORD": env("PG_PASS", default="1234"),
-    "HOST": env("PG_HOST", default="localhost"),
-    "PORT": env("PG_PORT", default="5432"),
-  }
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
 # correo de desarrollo: imprime en consola
@@ -116,25 +125,13 @@ DEFAULT_FROM_EMAIL = "no-reply@tu-empresa.cl"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {"NAME": "usuarios.validators.CustomComplexityValidator", "OPTIONS": {"min_length": 8}},
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es'
 
 TIME_ZONE = 'UTC'
 
