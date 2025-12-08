@@ -52,6 +52,63 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    let ignore = false;
+
+    const refreshSession = async () => {
+      try {
+        const res = await fetch("/api/auth/refresh", {
+          method: "POST",
+          credentials: "include",
+        }).catch(() => ({ ok: false } as Response));
+        if (!res.ok) return false;
+        await res.json().catch(() => null);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    const hydrateFromServer = async () => {
+      try {
+        let res = await fetch("/api/usuarios/me", { credentials: "include" }).catch(
+          () => ({ ok: false, status: 0 } as Response)
+        );
+
+        if (res.status === 401) {
+          const refreshed = await refreshSession();
+          if (refreshed) {
+            res = await fetch("/api/usuarios/me", { credentials: "include" }).catch(
+              () => ({ ok: false, status: 0 } as Response)
+            );
+          }
+        }
+
+        if (!res.ok) {
+          if (!ignore && res.status === 401) {
+            setUser(null);
+          }
+          return;
+        }
+        const data = await res.json().catch(() => null);
+        if (!data || ignore) return;
+        const augmented = {
+          ...data,
+          is_empleado: userIsEmpleado(data),
+        };
+        setUser(augmented);
+      } catch {
+        /* ignore */
+      }
+    };
+
+    hydrateFromServer();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
     try {
       if (user) {
         localStorage.setItem("auth", JSON.stringify({ user }));

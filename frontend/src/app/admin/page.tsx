@@ -1,15 +1,42 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { requireUser } from '@/lib/auth/serverTokens';
+import { requireUser, backendUrl } from '@/lib/auth/serverTokens';
+import { LOGOUT_COOKIE_NAMES } from '@/lib/auth/logoutHelper';
 
 export const dynamic = 'force-dynamic';
 
 async function logoutAction() {
   'use server';
-  try {
-    await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
-  } catch {}
+  const cookieStore: any = await (cookies() as any);
+  const refreshToken =
+    cookieStore.get('refresh_token')?.value ??
+    cookieStore.get('refresh')?.value ??
+    null;
+
+  if (refreshToken) {
+    try {
+      await fetch(`${backendUrl()}/api/auth/logout/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh: refreshToken }),
+      });
+    } catch (error) {
+      console.warn('[admin/logoutAction] backend logout failed', error);
+    }
+  }
+
+  const secure = process.env.NODE_ENV === 'production';
+  LOGOUT_COOKIE_NAMES.forEach((name) => {
+    cookieStore.set(name, '', {
+      httpOnly: true,
+      secure,
+      sameSite: 'lax',
+      expires: new Date(0),
+      path: '/',
+    });
+  });
+
   redirect('/admin/login');
 }
 
