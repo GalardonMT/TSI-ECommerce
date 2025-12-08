@@ -13,7 +13,7 @@ class CarritoView(APIView):
     def get_carrito(self, user):
         reserva, _ = Reserva.objects.get_or_create(
             usuario=user,
-            estado='PENDIENTE',
+            estado='CARRO',
             defaults={'fecha_reserva': timezone.now()}
         )
         return reserva
@@ -101,6 +101,48 @@ class CarritoView(APIView):
         detalle.delete()
 
         return Response({"message": "Producto eliminado"})
+
+    def patch(self, request):
+        reserva = Reserva.objects.filter(usuario=request.user, estado='CARRO').first()
+        if not reserva:
+            return Response({"detail": "No hay un carrito activo."}, status=status.HTTP_404_NOT_FOUND)
+
+        if not reserva.detalles.exists():
+            return Response({"detail": "El carrito está vacío."}, status=status.HTTP_400_BAD_REQUEST)
+
+        reserva.estado = 'PENDIENTE'
+        reserva.fecha_reserva = timezone.now()
+        reserva.save(update_fields=['estado', 'fecha_reserva'])
+
+        serializer = ReservaSerializer(reserva)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PedidosUsuarioView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    allowed_statuses = {"PENDIENTE", "CONFIRMADA", "COMPLETADA", "CANCELADA"}
+
+    def get(self, request):
+        estados_param = request.query_params.getlist("estado")
+
+        if estados_param:
+            estados_filtrados = {
+                estado.upper()
+                for estado in estados_param
+                if estado and estado.upper() in self.allowed_statuses
+            }
+        else:
+            estados_filtrados = self.allowed_statuses
+
+        pedidos = Reserva.objects.filter(
+            usuario=request.user,
+            usuario__isnull=False,
+            estado__in=estados_filtrados
+        ).select_related('usuario').prefetch_related('detalles__producto').order_by('-fecha_reserva', '-id_reserva')
+
+        serializer = ReservaSerializer(pedidos, many=True)
+        return Response(serializer.data)
 
 
 class IsStaffOrSuper(permissions.BasePermission):

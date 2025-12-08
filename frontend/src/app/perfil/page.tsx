@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { RegionesYComunas } from "@/lib/regiones";
 
 export default function PerfilPage() {
   const router = useRouter();
+  const regiones = RegionesYComunas.regiones || [];
   const [form, setForm] = useState({
     correo: "",
     rut: "",
@@ -178,7 +180,10 @@ export default function PerfilPage() {
           const authRaw = localStorage.getItem("auth");
           if (authRaw) {
             const parsed = JSON.parse(authRaw);
-            parsed.user = data ?? { ...parsed.user, ...form };
+            // asegurar que no guardamos objetos complejos como mensaje de error
+            parsed.user = data && typeof data === 'object' && !Array.isArray(data)
+              ? data
+              : { ...parsed.user, ...form };
             localStorage.setItem("auth", JSON.stringify(parsed));
           }
         } catch (e) {}
@@ -187,7 +192,12 @@ export default function PerfilPage() {
         const txt = await res.text().catch(() => "");
         let parsed = null;
         try { parsed = JSON.parse(txt); } catch (e) {}
-        setMsg({ type: "error", text: parsed?.detail || parsed || txt || 'Error al actualizar perfil.' });
+        const detail = typeof parsed?.detail === 'string'
+          ? parsed.detail
+          : typeof parsed === 'string'
+            ? parsed
+            : txt || 'Error al actualizar perfil.';
+        setMsg({ type: "error", text: detail });
       }
     } catch (e) {
       setMsg({ type: "error", text: "Error de red al guardar perfil." });
@@ -196,10 +206,17 @@ export default function PerfilPage() {
     }
   };
 
-  if (loading) return <div className="p-6 text-center">Cargando perfil...</div>;
+  if (loading)
+    return (
+      <section className="max-w-3xl mx-auto p-6 pt-24">
+        <div className="bg-white shadow-md rounded-lg p-6 text-center text-gray-600">
+          Cargando perfil...
+        </div>
+      </section>
+    );
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <section className="max-w-3xl mx-auto p-6 pt-24">
       <div className="bg-white shadow-md rounded-lg p-6">
         <h1 className="text-2xl font-semibold mb-4">Editar Perfil</h1>
 
@@ -250,16 +267,49 @@ export default function PerfilPage() {
               <input name="dir_numero" value={form.direccion.numero} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Comuna</label>
-              <input name="dir_comuna" value={form.direccion.comuna} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" />
+              <label className="block text-sm font-medium text-gray-700">Región</label>
+              <select
+                name="dir_region"
+                value={form.direccion.region}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
+              >
+                <option value="">Seleccione una región</option>
+                {regiones.map((r: any) => (
+                  <option key={r.NombreRegion} value={r.NombreRegion}>
+                    {r.NombreRegion}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Región</label>
-              <input name="dir_region" value={form.direccion.region} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" />
+              <label className="block text-sm font-medium text-gray-700">Comuna</label>
+              <select
+                name="dir_comuna"
+                value={form.direccion.comuna}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
+                disabled={!form.direccion.region}
+              >
+                <option value="">Seleccione una comuna</option>
+                {form.direccion.region &&
+                  regiones
+                    .find((r: any) => r.NombreRegion === form.direccion.region)?.comunas
+                    .map((c: any) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Depto / Oficina</label>
-              <input name="dir_depto_oficina" value={form.direccion.depto_oficina} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" />
+              <input
+                name="dir_depto_oficina"
+                value={form.direccion.depto_oficina}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
+              />
             </div>
           </div>
         </fieldset>
@@ -271,6 +321,6 @@ export default function PerfilPage() {
           <button onClick={() => router.push('/')} className="px-4 py-2 border rounded">Cancelar</button>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

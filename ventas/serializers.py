@@ -5,48 +5,33 @@ from inventario.models import Producto
 class DetalleReservaSerializer(serializers.ModelSerializer):
     nombre_producto = serializers.CharField(source="producto.nombre", read_only=True)
     imagen = serializers.CharField(source="producto.imagen", read_only=True)  # si agregas campo imagen
-    
+    stock_disponible = serializers.IntegerField(source="producto.stock_disponible", read_only=True)
+
     class Meta:
         model = DetalleReserva
-        fields = ['id', 'producto', 'nombre_producto', 'cantidad', 'precio_unitario', 'imagen']
+        fields = [
+            'id',
+            'producto',
+            'nombre_producto',
+            'cantidad',
+            'precio_unitario',
+            'imagen',
+            'stock_disponible',
+        ]
 
 
 class ReservaSerializer(serializers.ModelSerializer):
     detalles = DetalleReservaSerializer(many=True, read_only=True)
     cliente = serializers.SerializerMethodField()
     direccion = serializers.SerializerMethodField()
+    correo_usuario = serializers.SerializerMethodField()
 
     class Meta:
         model = Reserva
-        fields = [
-            'id_reserva',
-            'fecha_creacion',
-            'estado',
-            'cliente',
-            'direccion',
-            'detalles',
-        ]
+        fields = ['id_reserva', 'fecha_creacion', 'fecha_reserva', 'estado', 'correo_usuario', 'detalles']
 
-    def get_cliente(self, obj):
-        user = obj.usuario
-        if not user:
+    def get_correo_usuario(self, obj):
+        usuario = getattr(obj, "usuario", None)
+        if not usuario:
             return None
-        return {
-            "nombre": user.nombre,
-            "apellido_paterno": user.apellido_paterno,
-            "apellido_materno": user.apellido_materno,
-            "correo": user.correo,
-            "telefono": user.telefono,
-        }
-
-    def get_direccion(self, obj):
-        direccion = getattr(obj.usuario, "direccion", None)
-        if not direccion:
-            return None
-        return {
-            "calle": direccion.calle,
-            "numero": direccion.numero,
-            "comuna": direccion.comuna,
-            "region": direccion.region,
-            "depto_oficina": direccion.depto_oficina,
-        }
+        return getattr(usuario, "correo", None) or getattr(usuario, "email", None)

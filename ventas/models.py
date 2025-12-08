@@ -29,6 +29,7 @@ class Reserva(models.Model):
     fecha_reserva = models.DateField()
 
     ESTADO_OPCIONES = [
+        ('CARRO', 'Carro'),
         ('PENDIENTE', 'Pendiente'),
         ('CONFIRMADA', 'Confirmada'),
         ('COMPLETADA', 'Completada'),
@@ -37,7 +38,7 @@ class Reserva(models.Model):
     estado = models.CharField(
         max_length=20,
         choices=ESTADO_OPCIONES,
-        default='PENDIENTE'
+        default='CARRO'
     )
 
     class Meta:
@@ -45,7 +46,8 @@ class Reserva(models.Model):
         ordering = ['-fecha_reserva'] #Ordenar de las mas nuevas a las mas antiguas
 
     def __str__(self):
-        return f"Reserva {self.id_reserva} - {self.usuario.correo}"
+        correo = getattr(self.usuario, 'correo', None) or getattr(self.usuario, 'email', None) or 'Sin usuario'
+        return f"Reserva {self.id_reserva} - {correo}"
 
 
 class DetalleReserva(models.Model):
