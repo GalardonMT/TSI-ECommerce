@@ -29,6 +29,25 @@ export default function AdminProductsList({ products, categories }: Props) {
   const [items, setItems] = useState<any[]>(Array.isArray(products) ? products : []);
   const [categoryList, setCategoryList] = useState<Category[]>(Array.isArray(categories) ? categories : []);
   const [editing, setEditing] = useState<any | null>(null);
+  const [search, setSearch] = useState<string>("");
+  const [filterCategory, setFilterCategory] = useState<string | number>("ALL");
+
+  const filteredItems = items.filter((p) => {
+    const idVal = p.id ?? p.id_producto ?? "";
+    const nameVal = (p.nombre ?? "").toString().toLowerCase();
+    const searchTerm = search.trim().toLowerCase();
+
+    const matchesSearch = !searchTerm
+      ? true
+      : idVal?.toString() === searchTerm || nameVal.includes(searchTerm);
+
+    const productCategoryId =
+      p.categoria ?? p.id_categoria ?? p.categoria_id ?? p.categoriaId ?? p.category_id ?? null;
+    const matchesCategory =
+      filterCategory === "ALL" ? true : Number(productCategoryId) === Number(filterCategory);
+
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div>
@@ -47,6 +66,27 @@ export default function AdminProductsList({ products, categories }: Props) {
         </div>
       </div>
 
+      <div className="flex flex-col md:flex-row md:items-center gap-3 mb-3">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por ID exacto o nombre"
+          className="w-full md:w-64 border px-3 py-2 rounded text-sm"
+        />
+        <select
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value === "ALL" ? "ALL" : Number(e.target.value))}
+          className="w-full md:w-56 border px-3 py-2 rounded text-sm"
+        >
+          <option value="ALL">Todas las categorías</option>
+          {categoryList.map((c) => (
+            <option key={c.id_categoria} value={c.id_categoria}>
+              {c.nombre}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="overflow-x-auto bg-white border rounded">
         <table className="w-full text-left">
           <thead className="bg-gray-50">
@@ -61,7 +101,7 @@ export default function AdminProductsList({ products, categories }: Props) {
             </tr>
           </thead>
           <tbody>
-            {items.map((p) => {
+            {filteredItems.map((p) => {
               const img = p?.imagenes && p.imagenes.length ? p.imagenes[0].image : null;
               return (
                 <tr key={p.id || p.id_producto} className="border-t even:bg-gray-50">
@@ -100,7 +140,7 @@ export default function AdminProductsList({ products, categories }: Props) {
                 </tr>
               );
             })}
-            {items.length === 0 && (
+            {filteredItems.length === 0 && (
               <tr>
                 <td colSpan={6} className="p-6 text-center text-gray-500">No hay productos</td>
               </tr>

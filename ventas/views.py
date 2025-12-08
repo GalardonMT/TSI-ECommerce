@@ -103,19 +103,29 @@ class CarritoView(APIView):
         return Response({"message": "Producto eliminado"})
 
     def patch(self, request):
-        reserva = Reserva.objects.filter(usuario=request.user, estado='CARRO').first()
-        if not reserva:
-            return Response({"detail": "No hay un carrito activo."}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            reserva = Reserva.objects.filter(usuario=request.user, estado='CARRO').first()
+            if not reserva:
+                return Response({"detail": "No hay un carrito activo."}, status=status.HTTP_404_NOT_FOUND)
 
-        if not reserva.detalles.exists():
-            return Response({"detail": "El carrito está vacío."}, status=status.HTTP_400_BAD_REQUEST)
+            if not reserva.detalles.exists():
+                return Response({"detail": "El carrito está vacío."}, status=status.HTTP_400_BAD_REQUEST)
 
-        reserva.estado = 'PENDIENTE'
-        reserva.fecha_reserva = timezone.now()
-        reserva.save(update_fields=['estado', 'fecha_reserva'])
+            reserva.estado = 'PENDIENTE'
+            reserva.fecha_reserva = timezone.now()
+            reserva.save(update_fields=['estado', 'fecha_reserva'])
 
-        serializer = ReservaSerializer(reserva)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            serializer = ReservaSerializer(reserva)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as exc:  # keep checkout from failing silently
+            return Response(
+                {
+                    "detail": "Reserva confirmada, pero no se pudo serializar la respuesta",
+                    "id_reserva": reserva.id_reserva if 'reserva' in locals() and reserva else None,
+                    "error": str(exc),
+                },
+                status=status.HTTP_200_OK,
+            )
 
 
 class PedidosUsuarioView(APIView):
@@ -157,7 +167,12 @@ class IsStaffOrSuper(permissions.BasePermission):
 
 
 class ReservaAdminViewSet(viewsets.ModelViewSet):
-    queryset = Reserva.objects.all().order_by("-fecha_reserva")
+    queryset = (
+        Reserva.objects.exclude(estado='CARRO')
+        .select_related('usuario__direccion')
+        .prefetch_related('detalles__producto')
+        .order_by("-fecha_reserva", "-id_reserva")
+    )
     serializer_class = ReservaSerializer
 
     def get_permissions(self):

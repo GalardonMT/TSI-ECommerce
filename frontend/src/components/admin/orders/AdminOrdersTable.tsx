@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 const ESTADOS = ["PENDIENTE", "CONFIRMADA", "COMPLETADA", "CANCELADA"];
+const PAGE_SIZE = 10;
 
 type Detalle = {
   id: number;
@@ -32,7 +33,9 @@ type Direccion = {
 type Reserva = {
   id_reserva: number;
   fecha_creacion: string;
+  fecha_reserva?: string | null;
   estado: string;
+  correo_usuario?: string | null;
   cliente: Cliente;
   direccion: Direccion;
   detalles: Detalle[];
@@ -47,6 +50,7 @@ export default function AdminOrdersTable() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     let cancelled = false;
@@ -100,6 +104,11 @@ export default function AdminOrdersTable() {
     }
   }
 
+  // Reset page when filters or search change so we don't land on an empty page
+  useEffect(() => {
+    setPage(1);
+  }, [filterEstado, filterRegion, filterComuna, search]);
+
   if (loading) {
     return <div className="p-6">Cargando reservas...</div>;
   }
@@ -136,7 +145,7 @@ export default function AdminOrdersTable() {
   const visibleOrders = !searchTerm
     ? filteredOrders
     : filteredOrders.filter((o) => {
-        const idMatch = o.id_reserva.toString().includes(searchTerm);
+        const idMatch = o.id_reserva.toString() === searchTerm; // exact id match
         const cliente = o.cliente;
         const nombreCompleto = cliente
           ? `${cliente.nombre} ${cliente.apellido_paterno} ${cliente.apellido_materno || ""}`.toLowerCase()
@@ -147,8 +156,22 @@ export default function AdminOrdersTable() {
         return idMatch || nameMatch || mailMatch;
       });
 
+  const totalPages = Math.max(1, Math.ceil(visibleOrders.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const paginatedOrders = visibleOrders.slice(start, start + PAGE_SIZE);
+
   return (
     <div className="space-y-4">
+      <div className="pb-2">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por ID exacto, nombre o correo"
+          className="w-full border rounded px-3 py-2 text-sm"
+        />
+      </div>
+
       <div className="grid gap-3 pb-2 md:grid-cols-2 lg:grid-cols-4">
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Estado:</span>
@@ -200,18 +223,9 @@ export default function AdminOrdersTable() {
             ))}
           </select>
         </div>
-
-        <div className="flex items-center gap-2 w-full">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por ID, nombre o correo"
-            className="w-full border rounded px-3 py-2 text-sm"
-          />
-        </div>
       </div>
 
-      {visibleOrders.map((reserva) => (
+      {paginatedOrders.map((reserva) => (
         <div key={reserva.id_reserva} className="border rounded p-4 bg-white">
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -316,6 +330,31 @@ export default function AdminOrdersTable() {
           </table>
         </div>
       ))}
+
+      <div className="flex items-center justify-between text-sm text-gray-700 pt-2">
+        <div>
+          Mostrando {visibleOrders.length ? start + 1 : 0}-{Math.min(start + PAGE_SIZE, visibleOrders.length)} de {visibleOrders.length}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Anterior
+          </button>
+          <span>
+            Página {currentPage} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

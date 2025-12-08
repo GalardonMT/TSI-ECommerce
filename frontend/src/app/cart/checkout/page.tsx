@@ -1,19 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { RegionesYComunas } from "@/lib/regiones";
 import { confirmCart } from "@/app/api/cart/addItem";
-
-type CartItem = {
-	id: number;
-	nombre: string;
-	precio_unitario: number;
-	cantidad: number;
-	imagen?: string | null;
-};
-
-type Paso = 1 | 2 | 3;
+import { Stepper } from "@/components/cart/checkout/Stepper";
+import { UserForm } from "@/components/cart/checkout/UserForm";
+import { AddressForm } from "@/components/cart/checkout/AddressForm";
+import { ReviewStep } from "@/components/cart/checkout/ReviewStep";
+import { SummarySidebar } from "@/components/cart/checkout/SummarySidebar";
+import { AddressData, CartItem, Paso, UserData } from "@/components/cart/checkout/types";
 
 export default function CheckoutPage() {
 	const router = useRouter();
@@ -25,7 +21,7 @@ export default function CheckoutPage() {
 	const [error, setError] = useState<string | null>(null);
 
 	// datos de usuario / contacto
-	const [userData, setUserData] = useState({
+	const [userData, setUserData] = useState<UserData>({
 		nombre: "",
 		apellido: "",
 		rut: "",
@@ -34,7 +30,7 @@ export default function CheckoutPage() {
 	});
 
 	// dirección para envío (obligatoria)
-	const [address, setAddress] = useState({
+	const [address, setAddress] = useState<AddressData>({
 		calle: "",
 		numero: "",
 		region: "",
@@ -206,12 +202,12 @@ export default function CheckoutPage() {
 		};
 	}, []);
 
-	const handleUserChange = (e: any) => {
+	const handleUserChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		setUserData((prev) => ({ ...prev, [name]: value }));
 	};
 
-	const handleAddressChange = (e: any) => {
+	const handleAddressChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { name, value } = e.target;
 		setAddress((prev) => ({ ...prev, [name]: value }));
 	};
@@ -295,44 +291,9 @@ export default function CheckoutPage() {
 
 	return (
 		<section className="w-4/5 xl:w-3/5 mx-auto my-7 pt-24">
-			{/* pasos superiores */}
-			<div className="mb-6 flex items-center justify-between text-sm">
-				{[
-					{ id: 1, label: "Tus datos" },
-					{ id: 2, label: "Dirección" },
-					{ id: 3, label: "Reserva" },
-				].map((step) => {
-					const active = paso === step.id;
-					const done = paso > step.id;
-					return (
-						<div key={step.id} className="flex-1 flex flex-col items-center">
-							<div
-								className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 ${
-									active
-										? "bg-black border-black text-white"
-										: done
-										? "bg-white border-black text-black"
-										: "bg-white border-gray-300 text-gray-500"
-								}`}
-							>
-								{step.id}
-							</div>
-							<span
-								className={`mt-2 text-xs ${
-									active
-										? "text-black font-semibold"
-										: "text-gray-600"
-								}`}
-							>
-								{step.label}
-							</span>
-						</div>
-					);
-				})}
-			</div>
+			<Stepper current={paso} />
 
 			<div className="grid md:grid-cols-3 gap-6">
-				{/* contenido paso */}
 				<div className="md:col-span-2 bg-white rounded shadow p-6">
 					{error && (
 						<div className="mb-4 text-sm text-red-700 bg-red-100 p-3 rounded">
@@ -341,194 +302,15 @@ export default function CheckoutPage() {
 					)}
 
 					{paso === 1 && (
-						<div>
-							<h2 className="text-xl font-semibold mb-4">Tus datos</h2>
-							<p className="text-sm text-gray-600 mb-4">
-								Datos para envío de notificaciones de la compra.
-							</p>
-
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								<div>
-									<label className="block text-sm mb-1">Nombre</label>
-									<input
-										name="nombre"
-										value={userData.nombre}
-										onChange={handleUserChange}
-										className="w-full border border-gray-300 rounded-md p-2"
-									/>
-								</div>
-								<div>
-									<label className="block text-sm mb-1">Apellido</label>
-									<input
-										name="apellido"
-										value={userData.apellido}
-										onChange={handleUserChange}
-										className="w-full border border-gray-300 rounded-md p-2"
-									/>
-								</div>
-								<div>
-									<label className="block text-sm mb-1">RUT</label>
-									<input
-										name="rut"
-										value={userData.rut}
-										onChange={handleUserChange}
-										className="w-full border border-gray-300 rounded-md p-2"
-									/>
-								</div>
-								<div>
-									<label className="block text-sm mb-1">E-mail</label>
-									<input
-										name="email"
-										value={userData.email}
-										onChange={handleUserChange}
-										className="w-full border border-gray-300 rounded-md p-2"
-										type="email"
-									/>
-								</div>
-								<div>
-									<label className="block text-sm mb-1">Teléfono</label>
-									<input
-										name="telefono"
-										value={userData.telefono}
-										onChange={handleUserChange}
-										className="w-full border border-gray-300 rounded-md p-2"
-									/>
-								</div>
-							</div>
-						</div>
+						<UserForm value={userData} onChange={handleUserChange} />
 					)}
 
 					{paso === 2 && (
-						<div>
-							<h2 className="text-xl font-semibold mb-4">Dirección</h2>
-							<p className="text-sm text-gray-600 mb-4">
-								Dirección de envío para tu compra. Todos los campos son
-								obligatorios.
-							</p>
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								<div className="md:col-span-2">
-									<label className="block text-sm mb-1">Calle</label>
-									<input
-										name="calle"
-										value={address.calle}
-										onChange={handleAddressChange}
-										className="w-full border border-gray-300 rounded-md p-2"
-										required
-									/>
-								</div>
-								<div>
-									<label className="block text-sm mb-1">Número</label>
-									<input
-										name="numero"
-										value={address.numero}
-										onChange={handleAddressChange}
-										className="w-full border border-gray-300 rounded-md p-2"
-										required
-									/>
-								</div>
-								<div>
-									<label className="block text-sm mb-1">Región</label>
-									<select
-										name="region"
-										value={address.region}
-										onChange={handleAddressChange}
-										className="w-full border border-gray-300 rounded-md p-2"
-										required
-									>
-										<option value="">Seleccione una región</option>
-										{regiones.map((r: any) => (
-											<option key={r.NombreRegion} value={r.NombreRegion}>
-												{r.NombreRegion}
-											</option>
-										))}
-									</select>
-								</div>
-								<div>
-									<label className="block text-sm mb-1">Comuna</label>
-									<select
-										name="comuna"
-										value={address.comuna}
-										onChange={handleAddressChange}
-										className="w-full border border-gray-300 rounded-md p-2"
-										disabled={!address.region}
-										required
-									>
-										<option value="">Seleccione una comuna</option>
-										{address.region &&
-											regiones
-												.find((r: any) => r.NombreRegion === address.region)?.comunas
-												.map((c: any) => (
-													<option key={c} value={c}>
-														{c}
-													</option>
-												))}
-									</select>
-								</div>
-								<div>
-									<label className="block text-sm mb-1">Depto / Oficina</label>
-									<input
-										name="depto_oficina"
-										value={address.depto_oficina}
-										onChange={handleAddressChange}
-										className="w-full border border-gray-300 rounded-md p-2"
-									/>
-								</div>
-							</div>
-						</div>
+						<AddressForm value={address} regiones={regiones} onChange={handleAddressChange} />
 					)}
 
 					{paso === 3 && (
-						<div>
-							<h2 className="text-xl font-semibold mb-4">Reserva</h2>
-							<p className="text-sm text-gray-600 mb-4">
-								Revisa el detalle de tu compra antes de confirmar.
-							</p>
-
-							<div className="mb-6 space-y-3">
-								{cartItems.map((item) => (
-									<div
-										key={item.id}
-										className="flex justify-between items-center border-b pb-2 text-sm"
-									>
-										<div className="flex-1 pr-4">
-											<div className="font-medium text-gray-800">
-												{item.nombre}
-											</div>
-											<div className="text-gray-500">
-												Cantidad: {item.cantidad}
-											</div>
-										</div>
-										<div className="text-right text-gray-800 font-semibold">
-											${(item.precio_unitario * item.cantidad).toLocaleString()}
-										</div>
-									</div>
-								))}
-							</div>
-
-							<div className="border-t pt-4 text-sm space-y-1">
-								<div className="font-semibold text-gray-800">Resumen de datos</div>
-								<div className="text-gray-700">
-									<span className="font-medium">Nombre:</span> {userData.nombre} {" "}
-									{userData.apellido}
-								</div>
-								<div className="text-gray-700">
-									<span className="font-medium">RUT:</span> {userData.rut}
-								</div>
-								<div className="text-gray-700">
-									<span className="font-medium">E-mail:</span> {userData.email}
-								</div>
-								<div className="text-gray-700">
-									<span className="font-medium">Teléfono:</span> {userData.telefono}
-								</div>
-								<div className="text-gray-700">
-									<span className="font-medium">Dirección:</span> {address.calle} {address.numero}, {" "}
-									{address.comuna}, {address.region}
-									{address.depto_oficina
-										? `, Depto/Oficina: ${address.depto_oficina}`
-										: ""}
-								</div>
-							</div>
-						</div>
+						<ReviewStep cartItems={cartItems} userData={userData} address={address} />
 					)}
 
 					<div className="mt-6 flex justify-between">
@@ -562,33 +344,7 @@ export default function CheckoutPage() {
 					</div>
 				</div>
 
-				{/* resumen lateral */}
-				<aside className="bg-gray-50 rounded border p-4 self-start">
-					<div className="text-lg font-semibold mb-2">Resumen ({totalCantidad} producto{totalCantidad !== 1 ? "s" : ""})</div>
-					<div className="space-y-2 text-sm mb-4">
-						{cartItems.slice(0, 3).map((item) => (
-							<div key={item.id} className="flex justify-between">
-								<span className="text-gray-700 truncate max-w-[180px]">
-									{item.nombre} x{item.cantidad}
-								</span>
-								<span className="text-gray-900 font-medium">
-									${(item.precio_unitario * item.cantidad).toLocaleString()}
-								</span>
-							</div>
-						))}
-						{cartItems.length > 3 && (
-							<div className="text-xs text-gray-500">
-								y {cartItems.length - 3} producto(s) más...
-							</div>
-						)}
-					</div>
-					<div className="border-t pt-3 mt-2 text-sm flex justify-between">
-						<span className="text-gray-700">Total</span>
-						<span className="text-xl font-bold text-gray-900">
-							${total.toLocaleString()}
-						</span>
-					</div>
-				</aside>
+				<SummarySidebar cartItems={cartItems} />
 			</div>
 		</section>
 	);

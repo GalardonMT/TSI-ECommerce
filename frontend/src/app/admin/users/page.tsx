@@ -11,6 +11,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [search, setSearch] = useState('');
 
   async function load() {
     setLoading(true);
@@ -58,17 +59,41 @@ export default function AdminUsersPage() {
     return res;
   }
 
+  const searchTerm = search.trim().toLowerCase();
+  const filtered = !searchTerm
+    ? users
+    : users.filter((u) => {
+        const idMatch = u.id?.toString() === searchTerm; // exact ID match
+        const nameMatch = `${u.nombre ?? ''} ${u.apellido_paterno ?? ''} ${u.apellido_materno ?? ''}`
+          .toLowerCase()
+          .includes(searchTerm);
+        const emailMatch = (u.correo ?? u.email ?? '').toLowerCase().includes(searchTerm);
+        return idMatch || nameMatch || emailMatch;
+      });
+
   // grouped lists
-  const superusers = users.filter((u) => u.is_superuser);
-  const staffOnly = users.filter((u) => u.is_staff && !u.is_superuser);
-  const nonStaff = users.filter((u) => !u.is_staff && !u.is_superuser);
+  const superusers = filtered.filter((u) => u.is_superuser);
+  const staffOnly = filtered.filter((u) => u.is_staff && !u.is_superuser);
+  const nonStaff = filtered.filter((u) => !u.is_staff && !u.is_superuser);
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <h1 className="text-2xl font-bold">Administrar usuarios</h1>
-        <div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por ID exacto, nombre o correo"
+            className="border px-3 py-2 rounded text-sm w-72 md:w-96"
+          />
           <button onClick={() => setShowCreate(true)} className="px-3 py-2 bg-blue-600 text-white rounded">Crear empleado</button>
+          <a
+            href="/admin"
+            className="px-3 py-2 border rounded text-sm hover:bg-gray-50"
+          >
+            ← Volver a admin
+          </a>
         </div>
       </div>
 
