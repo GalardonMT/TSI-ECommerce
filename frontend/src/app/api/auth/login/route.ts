@@ -14,8 +14,45 @@ export async function POST(request: NextRequest) {
       cache: "no-store",
     });
 
-    const data = await response.json().catch(() => null);
-    return NextResponse.json(data, { status: response.status });
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      return NextResponse.json(data ?? { detail: "Credenciales inválidas" }, { status: response.status });
+    }
+
+    const user = data?.user ?? null;
+    const accessToken = data?.access ?? data?.tokens?.access ?? null;
+    const refreshToken = data?.refresh ?? data?.tokens?.refresh ?? null;
+
+    const res = NextResponse.json({ user, access: accessToken, refresh: refreshToken });
+
+    const secure = process.env.NODE_ENV === "production";
+    if (accessToken) {
+      res.cookies.set("access_token", accessToken, {
+        httpOnly: true,
+        secure,
+        sameSite: "lax",
+        maxAge: 60 * 15,
+        path: "/",
+      });
+    }
+
+    if (refreshToken) {
+      res.cookies.set("refresh_token", refreshToken, {
+        httpOnly: true,
+        secure,
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+      });
+    }
+
+    return res;
   } catch (error) {
     return NextResponse.json({ detail: "Backend unreachable" }, { status: 502 });
   }

@@ -27,55 +27,30 @@ export default function PerfilPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
+  const refreshSession = async () => {
+    const res = await fetch("/api/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => ({ ok: false, status: 0 } as Response));
+    if (!res.ok) {
+      return false;
+    }
+    await res.json().catch(() => null);
+    return true;
+  };
+
   // Load user profile via server proxy (/api/usuarios/me)
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("access") || localStorage.getItem("token");
-        const headers: Record<string, string> = {};
-        if (token) headers.Authorization = `Bearer ${token}`;
-
         // attempt to GET profile; if 401 with expired token, try refresh and retry once
-        let res = await fetch("/api/usuarios/me", { headers }).catch(() => ({ ok: false, status: 0 } as Response));
+        let res = await fetch("/api/usuarios/me", { credentials: "include" }).catch(() => ({ ok: false, status: 0 } as Response));
 
         if (res.status === 401) {
-          // read body to inspect token issue
-          const bodyText = await res.text().catch(() => '');
-          let parsedBody: any = null;
-          try { parsedBody = JSON.parse(bodyText); } catch (e) { parsedBody = null; }
-          const code = parsedBody?.code || parsedBody?.detail || '';
-          // detect expired access token
-          const isExpired = bodyText?.toLowerCase().includes('expired') || (Array.isArray(parsedBody?.messages) && parsedBody.messages.some((m: any) => String(m.message).toLowerCase().includes('expired')));
-          if (isExpired) {
-            // try refresh using refresh token from localStorage via server proxy
-            const refreshToken = localStorage.getItem('refresh') || (() => { try { const a = JSON.parse(localStorage.getItem('auth')||'{}'); return a?.refresh || a?.tokens?.refresh || null; } catch(e){return null;} })();
-            if (refreshToken) {
-              const r = await fetch('/api/auth/refresh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ refresh: refreshToken }),
-              }).catch(() => ({ ok: false, status: 0 } as Response));
-              if (r.ok) {
-                const tokens = await r.json().catch(() => null);
-                const newAccess = tokens?.access || tokens?.token || null;
-                if (newAccess) {
-                  try { localStorage.setItem('access', newAccess); } catch (e) {}
-                  // retry original request with new token
-                  const headers2: Record<string,string> = { ...(newAccess ? { Authorization: `Bearer ${newAccess}` } : {}) };
-                  res = await fetch('/api/usuarios/me', { headers: headers2 }).catch(() => ({ ok: false, status: 0 } as Response));
-                }
-              } else {
-                const txt = await r.text().catch(() => '');
-                setMsg({ type: 'error', text: `Refresh failed ${r.status}: ${txt || '(sin cuerpo)'}` });
-                setLoading(false);
-                return;
-              }
-            } else {
-              setMsg({ type: 'error', text: 'Access token expirado y no se encontró refresh token.' });
-              setLoading(false);
-              return;
-            }
+          const refreshed = await refreshSession();
+          if (refreshed) {
+            res = await fetch("/api/usuarios/me", { credentials: "include" }).catch(() => ({ ok: false, status: 0 } as Response));
           }
         }
 
@@ -128,47 +103,23 @@ export default function PerfilPage() {
     setSaving(true);
     setMsg(null);
     try {
-      const token = localStorage.getItem("access") || localStorage.getItem("token");
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) headers.Authorization = `Bearer ${token}`;
-
       let res = await fetch("/api/usuarios/me", {
         method: "PATCH",
-        headers,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
+        credentials: "include",
       }).catch(() => ({ ok: false, status: 0 } as Response));
 
       // If 401 expired, try refresh then retry once
       if (res.status === 401) {
-        const bodyText = await res.text().catch(() => '');
-        const isExpired = bodyText?.toLowerCase().includes('expired');
-        if (isExpired) {
-          const refreshToken = localStorage.getItem('refresh') || (() => { try { const a = JSON.parse(localStorage.getItem('auth')||'{}'); return a?.refresh || a?.tokens?.refresh || null; } catch(e){return null;} })();
-          if (refreshToken) {
-            const r = await fetch('/api/auth/refresh', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ refresh: refreshToken }),
-            }).catch(() => ({ ok: false, status: 0 } as Response));
-            if (r.ok) {
-              const tokens = await r.json().catch(() => null);
-              const newAccess = tokens?.access || tokens?.token || null;
-              if (newAccess) {
-                try { localStorage.setItem('access', newAccess); } catch (e) {}
-                headers.Authorization = `Bearer ${newAccess}`;
-                res = await fetch("/api/usuarios/me", { method: 'PATCH', headers, body: JSON.stringify(form) }).catch(() => ({ ok: false, status: 0 } as Response));
-              }
-            } else {
-              const txt = await r.text().catch(() => '');
-              setMsg({ type: 'error', text: `Refresh failed ${r.status}: ${txt || '(sin cuerpo)'}` });
-              setSaving(false);
-              return;
-            }
-          } else {
-            setMsg({ type: 'error', text: 'Access token expirado y no se encontró refresh token.' });
-            setSaving(false);
-            return;
-          }
+        const refreshed = await refreshSession();
+        if (refreshed) {
+          res = await fetch("/api/usuarios/me", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(form),
+            credentials: "include",
+          }).catch(() => ({ ok: false, status: 0 } as Response));
         }
       }
 

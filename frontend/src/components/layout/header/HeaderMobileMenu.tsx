@@ -69,6 +69,7 @@ export default function HeaderMobileMenu({
   };
 
   const handleLogout = () => {
+    fetch("/api/auth/logout", { method: "POST", credentials: "include" }).catch(() => undefined);
     clearTokens();
     onUserChange(null);
     setProductsOpen(false);

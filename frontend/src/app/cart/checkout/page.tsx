@@ -11,6 +11,24 @@ import { ReviewStep } from "@/components/cart/checkout/ReviewStep";
 import { SummarySidebar } from "@/components/cart/checkout/SummarySidebar";
 import { AddressData, CartItem, Paso, UserData } from "@/components/cart/checkout/types";
 
+const refreshSession = async (): Promise<boolean> => {
+	try {
+		const res = await fetch("/api/auth/refresh", {
+			method: "POST",
+			credentials: "include",
+		}).catch(() => ({ ok: false } as Response));
+
+		if (!res.ok) {
+			return false;
+		}
+
+		await res.json().catch(() => null);
+		return true;
+	} catch {
+		return false;
+	}
+};
+
 export default function CheckoutPage() {
 	const router = useRouter();
 	const regiones = RegionesYComunas.regiones || [];
@@ -40,160 +58,92 @@ export default function CheckoutPage() {
 
 	const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
-	const total = cartItems.reduce((sum, p) => sum + p.precio_unitario * p.cantidad, 0);
-	const totalCantidad = cartItems.reduce((sum, p) => sum + p.cantidad, 0);
-
-	// cargar perfil (si está logeado) + carrito
 	useEffect(() => {
 		let cancelled = false;
 
-		async function loadAll() {
+		const loadAll = async () => {
 			setLoading(true);
 			setError(null);
 			try {
-				// --- cargar perfil ---
-				try {
-					const token = typeof window !== "undefined"
-						? (() => {
-							const direct =
-								localStorage.getItem("access") ||
-								localStorage.getItem("token");
-							if (direct) return direct;
-							try {
-								const authStored = localStorage.getItem("auth");
-								if (!authStored) return null;
-								const parsed = JSON.parse(authStored);
-								return (
-									parsed?.tokens?.access ||
-									parsed?.access ||
-									null
-								);
-							} catch (err) {
-								return null;
-							}
-						})()
-						: null;
-					const headers: Record<string, string> = {};
-					if (token) headers.Authorization = `Bearer ${token}`;
+				let profileRes = await fetch("/api/usuarios/me", {
+					credentials: "include",
+				}).catch(() => ({ ok: false, status: 0 } as Response));
 
-					let res = await fetch("/api/usuarios/me", { headers }).catch(
-						() => ({ ok: false, status: 0 } as Response)
-					);
-
-					if (res.status === 401) {
-						const bodyText = await res.text().catch(() => "");
-						let parsedBody: any = null;
-						try {
-							parsedBody = JSON.parse(bodyText);
-						} catch (err) {
-							parsedBody = null;
-						}
-						const isExpired =
-							bodyText.toLowerCase().includes("expired") ||
-							(Array.isArray(parsedBody?.messages) &&
-								parsedBody.messages.some((m: any) =>
-									typeof m?.message === "string" &&
-									m.message.toLowerCase().includes("expired")
-								));
-
-						if (isExpired) {
-							const refreshToken =
-								typeof window !== "undefined"
-									? localStorage.getItem("refresh") ||
-										(() => {
-											try {
-												const a = JSON.parse(
-													localStorage.getItem("auth") || "{}"
-												);
-												return a?.refresh || a?.tokens?.refresh || null;
-											} catch (err) {
-												return null;
-											}
-										})()
-								: null;
-
-							if (refreshToken) {
-								const refreshRes = await fetch("/api/auth/refresh", {
-									method: "POST",
-									headers: { "Content-Type": "application/json" },
-									body: JSON.stringify({ refresh: refreshToken }),
-								}).catch(() => ({ ok: false, status: 0 } as Response));
-
-								if (refreshRes.ok) {
-									const tokens = await refreshRes
-										.json()
-										.catch(() => null);
-									const newAccess = tokens?.access || tokens?.token || null;
-									if (newAccess) {
-										try {
-											localStorage.setItem("access", newAccess);
-										} catch (err) {}
-										headers.Authorization = `Bearer ${newAccess}`;
-										res = await fetch("/api/usuarios/me", {
-											headers,
-										}).catch(() => ({ ok: false, status: 0 } as Response));
-									}
-								}
-							}
-						}
+				if (profileRes.status === 401) {
+					const refreshed = await refreshSession();
+					if (refreshed) {
+						profileRes = await fetch("/api/usuarios/me", {
+							credentials: "include",
+						}).catch(() => ({ ok: false, status: 0 } as Response));
 					}
-
-					if (res.ok) {
-						const data = await res.json().catch(() => null);
-						if (!cancelled && data) {
-							setUserData((prev) => ({
-								...prev,
-								nombre: data.nombre ?? data.first_name ?? prev.nombre,
-								apellido:
-									data.apellido_paterno ?? data.last_name ?? prev.apellido,
-								rut: data.rut ?? prev.rut,
-								email: data.correo ?? data.email ?? prev.email,
-								telefono: data.telefono ?? data.phone ?? prev.telefono,
-							}));
-
-							const dir = data.direccion || data.address || {};
-							setAddress((prev) => ({
-								...prev,
-								calle: dir.calle ?? prev.calle,
-								numero: dir.numero ?? prev.numero,
-								region: dir.region ?? prev.region,
-								comuna: dir.comuna ?? prev.comuna,
-								depto_oficina: dir.depto_oficina ?? prev.depto_oficina,
-							}));
-						}
-					}
-				} catch (e) {
-					// si falla perfil, se sigue como invitado
 				}
 
-				// --- cargar carrito ---
-				try {
-					const resCart = await fetch("/api/cart", { credentials: "include" });
-					if (resCart.ok) {
-						const data = await resCart.json().catch(() => null);
-						const detalles = Array.isArray(data?.detalles) ? data.detalles : [];
-						const mapped: CartItem[] = detalles.map((d: any) => ({
-							id: d.producto,
-							nombre: d.nombre_producto,
-							precio_unitario: Number(d.precio_unitario || 0),
-							cantidad: Number(d.cantidad || 0),
-							imagen: d.imagen ?? null,
+				if (profileRes.ok) {
+					const data = await profileRes.json().catch(() => null);
+					if (!cancelled && data) {
+						setUserData((prev) => ({
+							...prev,
+							nombre: data.nombre ?? data.first_name ?? prev.nombre,
+							apellido:
+								data.apellido_paterno ?? data.last_name ?? prev.apellido,
+							rut: data.rut ?? prev.rut,
+							email: data.correo ?? data.email ?? prev.email,
+							telefono: data.telefono ?? data.phone ?? prev.telefono,
 						}));
-						if (!cancelled) setCartItems(mapped);
-					} else if (resCart.status === 401) {
-						if (!cancelled)
-							setError(
-								"Debes iniciar sesión para continuar con el checkout."
-							);
+
+						const dir = data.direccion || data.address || {};
+						setAddress((prev) => ({
+							...prev,
+							calle: dir.calle ?? prev.calle,
+							numero: dir.numero ?? prev.numero,
+							region: dir.region ?? prev.region,
+							comuna: dir.comuna ?? prev.comuna,
+							depto_oficina: dir.depto_oficina ?? prev.depto_oficina,
+						}));
+
+						try {
+							localStorage.setItem("auth", JSON.stringify({ user: data }));
+						} catch {
+							/* ignore storage issues */
+						}
 					}
-				} catch (e) {
-					if (!cancelled)
+				}
+
+				let cartRes = await fetch("/api/cart", {
+					credentials: "include",
+				}).catch(() => ({ ok: false, status: 0 } as Response));
+
+				if (cartRes.status === 401) {
+					const refreshed = await refreshSession();
+					if (refreshed) {
+						cartRes = await fetch("/api/cart", {
+							credentials: "include",
+						}).catch(() => ({ ok: false, status: 0 } as Response));
+					}
+				}
+
+				if (cartRes.ok) {
+					const data = await cartRes.json().catch(() => null);
+					const detalles = Array.isArray(data?.detalles) ? data.detalles : [];
+					const mapped: CartItem[] = detalles.map((d: any) => ({
+						id: d.producto,
+						nombre: d.nombre_producto,
+						precio_unitario: Number(d.precio_unitario || 0),
+						cantidad: Number(d.cantidad || 0),
+						imagen: d.imagen ?? null,
+					}));
+					if (!cancelled) setCartItems(mapped);
+				} else if (!cancelled) {
+					if (cartRes.status === 401) {
+						setError("Debes iniciar sesión para continuar con el checkout.");
+					} else {
 						setError("No se pudo cargar el carrito para el checkout.");
+					}
 				}
 			} finally {
 				if (!cancelled) setLoading(false);
 			}
-		}
+		};
 
 		loadAll();
 
@@ -252,7 +202,14 @@ export default function CheckoutPage() {
 		setSaving(true);
 		setError(null);
 		try {
-			const res = await confirmCart();
+			let res = await confirmCart();
+			if (!res.ok && res.status === 401) {
+				const refreshed = await refreshSession();
+				if (refreshed) {
+					res = await confirmCart();
+				}
+			}
+
 			if (!res.ok) {
 				const message =
 					typeof res.data?.detail === "string"
