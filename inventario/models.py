@@ -33,10 +33,12 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True, null=True, help_text="Descripcion opcional")
     precio = models.IntegerField(help_text="Precio unitario en pesos")
+    destacado = models.BooleanField(default=False, help_text="Si se marca, aparecerá en la página principal")
     stock_disponible = models.IntegerField(
         default=0,
         help_text="Stock actual disponible en inventario"
     )
+    
 
     class Meta:
         db_table = 'PRODUCTO'

@@ -19,6 +19,20 @@ class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
 
+    def get_queryset(self):
+        """
+        Sobrescribimos esto para permitir filtrar por destacados
+        """
+        queryset = Producto.objects.all()
+        destacado = self.request.query_params.get('destacado')
+        
+        if destacado is not None:
+            # Si en la URL viene ?destacado=true, filtramos
+            if destacado.lower() == 'true':
+                queryset = queryset.filter(destacado=True)
+        
+        return queryset
+
     def get_permissions(self):
         if self.action in ("create", "update", "partial_update", "destroy"):
             permission_classes = [permissions.IsAuthenticated, IsStaffOrSuper]

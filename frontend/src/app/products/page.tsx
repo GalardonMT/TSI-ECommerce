@@ -91,7 +91,7 @@ export default function ProductsPage() {
     );
   };
 
-  if (loading) return <div className="text-center py-20 text-xl">Cargando catálogo...</div>;
+  if (loading) return <div className="text-center py-24"></div>;
 
   return ( 
     <div className="container mx-auto py-16 px-4">

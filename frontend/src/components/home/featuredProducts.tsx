@@ -1,87 +1,91 @@
 import Image from "next/image";
 import Link from 'next/link';
+import { backendUrl } from "@/lib/auth/serverTokens";
 
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
+// Tipos de datos que vienen del Backend
+type ProductoImagen = {
+  image: string;
+  orden: number;
+};
 
-const FeaturedProducts = [
-{
-  id: "super-coat",
-  subtitle: "Compromiso Nano",
-  title: "SUPER COAT",
-  description: "Recubrimiento Cerámico Nano protege su vehículo contra rayones, excrementos de aves, lluvia ácida, rayos UV, detergentes y diversos productos químicos.",
-  details: "Cuenta con una duración de 3 años y ofrece un efecto de súper brillo con alta repelencia al agua.",
-  imageSrc: "/SuperCoat.jpg", // Ruta a la imagen del producto
-  imageAlt: "Botella de SUPER COAT",
-  bgImageSrc: "/product-bg-placeholder.jpg", // Opcional: Imagen de fondo para la columna
-  bgImageAlt: "Fondo de presentación",
-},
-{
-    id: "otro-producto",
-    subtitle: "Limpieza Profunda",
-    title: "NANO CLEANER",
-    description: "Limpiador intensivo con nanotecnología para eliminar suciedad difícil sin dañar superficies.",
-    details: "Ideal para llantas, motores y tapicería.",
-    imageSrc: "/nano-cleaner.png",
-    imageAlt: "Botella de NANO CLEANER",
-    bgImageSrc: "/product-bg-placeholder-2.jpg",
-    bgImageAlt: "Fondo diferente",
-  },
-];
+type ProductoBackend = {
+  id_producto: number;
+  nombre: string;
+  precio: number;
+  imagenes: ProductoImagen[];
+  destacado: boolean;
+};
 
-export default function featuredProdutcts (){
+// Función para obtener SOLO los destacados (Server Side)
+async function getFeaturedProducts() {
+  const BACKEND = backendUrl();
+  try {
+    const res = await fetch(`${BACKEND}/api/inventario/producto/?destacado=true`, {
+      cache: "no-store", 
+    });
+
+    if (!res.ok) return [];
+    
+    const data: ProductoBackend[] = await res.json();
+    // Aumentamos el límite a 4 u 8 para que se vea bien en la nueva grilla
+    return data; 
+  } catch (error) {
+    console.error("Error fetching featured products:", error);
+    return [];
+  }
+}
+
+export default async function FeaturedProducts() {
+  const products = await getFeaturedProducts();
+
+  if (products.length === 0) return null;
+
   return (
-    <section className="container mx-auto py-16">
-      <div className="bg-neutral-200 overflow-hidden">
-        <Carousel
-          opts={{
-          align: "start",
-          loop: true,
-          }}
-        >
-          <CarouselContent>
-            {FeaturedProducts.map((product) => (
-              <CarouselItem key={product.id}>
-              <div className="flex flex-col md:flex-row">
+    <section className="container mx-auto py-16 px-4">
+      <h2 className="text-3xl mb-8 text-center uppercase tracking-tight">
+        Destacados
+      </h2>
 
-                <div className="w-full md:w-1/2 text-left p-4 md:p-8">
-                  <h3 className="text-sm font-semibold uppercase text-gray-500 mb-2">
-                    {product.subtitle}
-                  </h3>
-                  <h2 className="text-4xl font-extrabold mb-4">
-                    {product.title}
-                  </h2>
-                  <p className="mb-4 text-gray-700">
-                    {product.description}
-                  </p>
-                  <p className="mb-4 text-sm text-gray-500 italic">
-                    {product.details}
-                  </p>
-                  <Link href="/products">
-                    <button className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition">
-                      Ver producto
-                    </button>
-                  </Link> 
-                </div>
+      {/* CAMBIO CLAVE EN EL GRID:
+         - grid-cols-2: En móviles se verán 2 productos pequeños por fila.
+         - sm:grid-cols-3: En tablets 3.
+         - lg:grid-cols-4: En PC grandes 4 (esto reduce el tamaño individual de cada tarjeta).
+      */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:gap-x-6">
+        {products.map((product) => {
+          const imageSrc = product.imagenes && product.imagenes.length > 0 
+            ? product.imagenes[0].image 
+            : "/placeholder.png"; 
 
-                <div className="w-full md:w-1/2 bg-gray-300 flex items-center justify-center">
-                  <img
-                    src={product.imageSrc}
-                    alt={product.imageAlt}
-                    className="object-contain w-auto"
-                  />
-                </div>   
+          return (
+            <div key={product.id_producto} className="group relative">
+              {/* Contenedor de imagen cuadrado */}
+              <div className="aspect-square w-full overflow-hidden bg-gray-200 relative">
+                <Image
+                  src={imageSrc}
+                  alt={product.nombre}
+                  fill
+                  className="object-cover object-center group-hover:opacity-75 transition-opacity duration-300"
+                  unoptimized={true}
+                />
               </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>  
-        </Carousel>
-      </div>  
+
+              {/* Información */}
+              <div className="mt-3 text-center">
+                <h3 className="text-sm font-medium text-gray-700 truncate px-2">
+                  <Link href={`/products/${product.id_producto}`}>
+                    <span aria-hidden="true" className="absolute inset-0" />
+                    {product.nombre}
+                  </Link>
+                </h3>
+                <p className="mt-1 text-sm text-gray-900">
+                  ${product.precio}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </section>
-  )
+  );
 }
