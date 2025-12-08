@@ -23,8 +23,14 @@ export default async function AdminProductsPage() {
 
     return (
         <div className="p-8">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
                 <h1 className="text-2xl font-bold">Admin — Productos</h1>
+                <a
+                    href="/admin"
+                    className="px-3 py-2 border rounded text-sm hover:bg-gray-50"
+                >
+                    ← Volver a admin
+                </a>
             </div>
             <AdminProductsList products={products} categories={categories} />
         </div>

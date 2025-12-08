@@ -2,12 +2,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProductCard from "@/components/cart/productsCard";
+import { updateCartItem, removeCartItem } from "@/app/api/cart/addItem";
 
 type CartItem = {
   id: number;
   nombre: string;
   precio_unitario: number;
   cantidad: number;
+  stock_disponible?: number;
   imagen?: string | null;
 };
 
@@ -42,6 +44,7 @@ export default function Cart() {
           nombre: d.nombre_producto,
           precio_unitario: Number(d.precio_unitario || 0),
           cantidad: Number(d.cantidad || 0),
+          stock_disponible: typeof d.stock_disponible === 'number' ? d.stock_disponible : undefined,
           imagen: d.imagen ?? null,
         }));
         setItems(mapped);
@@ -58,18 +61,62 @@ export default function Cart() {
     };
   }, []);
 
-  function removeItem(id: number) {
+  async function removeItem(id: number) {
+    const prev = items;
     setItems((s) => s.filter((p) => p.id !== id));
-    // TODO: optionally call DELETE /api/ventas/carrito/ to sync backend
+
+    const res = await removeCartItem(id);
+    if (!res.ok) {
+      // revert on error
+      setItems(prev);
+      if (res.data?.detail) setError(res.data.detail);
+    }
   }
 
-  function changeQty(id: number, qty: number) {
+  async function changeQty(id: number, qty: number) {
+    const prev = items;
+    const item = items.find((p) => p.id === id);
+    if (!item) return;
+
+    // normalizar cantidad mínima
+    if (qty <= 0) {
+      qty = 0;
+    }
+
+    // límite por stock (si se conoce): cantidad actual + lo que queda en bodega
+    const maxTotal =
+      typeof item.stock_disponible === 'number'
+        ? item.cantidad + item.stock_disponible
+        : undefined;
+    if (maxTotal != null && qty > maxTotal) {
+      qty = maxTotal; // si excede, ajustar al máximo permitido
+    }
+
     if (qty <= 0) {
       setItems((s) => s.filter((p) => p.id !== id));
     } else {
-      setItems((s) => s.map((p) => (p.id === id ? { ...p, cantidad: qty } : p)));
+      const diff = qty - item.cantidad;
+      setItems((s) =>
+        s.map((p) =>
+          p.id === id
+            ? {
+                ...p,
+                cantidad: qty,
+                stock_disponible:
+                  typeof p.stock_disponible === 'number'
+                    ? p.stock_disponible - diff
+                    : p.stock_disponible,
+              }
+            : p
+        )
+      );
     }
-    // TODO: optionally call PUT /api/ventas/carrito/ to sync backend
+
+    const res = await updateCartItem(id, qty);
+    if (!res.ok) {
+      // si backend falla por cualquier motivo, revertimos
+      setItems(prev);
+    }
   }
 
   const total = items.reduce((sum, p) => sum + p.precio_unitario * p.cantidad, 0);
@@ -90,20 +137,32 @@ export default function Cart() {
         <div className="bg-white rounded shadow p-4">
           <div className="grid md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4">
-              {items.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  product={{
-                    id: String(p.id),
-                    name: p.nombre,
-                    price: p.precio_unitario,
-                    qty: p.cantidad,
-                    image: p.imagen || undefined,
-                  }}
-                  onRemove={(id) => removeItem(Number(id))}
-                  onChangeQty={(id, qty) => changeQty(Number(id), qty)}
-                />
-              ))}
+              {items.map((p) => {
+                const maxTotal =
+                  typeof p.stock_disponible === "number"
+                    ? p.cantidad + p.stock_disponible
+                    : undefined;
+                const canIncrease = maxTotal == null ? true : p.cantidad < maxTotal;
+
+                return (
+                  <ProductCard
+                    key={p.id}
+                    product={{
+                      id: String(p.id),
+                      name: p.nombre,
+                      price: p.precio_unitario,
+                      qty: p.cantidad,
+                      image: p.imagen || undefined,
+                    }}
+                    stockDisponible={p.stock_disponible}
+                    onRemove={(id) => removeItem(Number(id))}
+                    onChangeQty={(id, qty) => {
+                      if (!canIncrease && qty > p.cantidad) return;
+                      changeQty(Number(id), qty);
+                    }}
+                  />
+                );
+              })}
             </div>
 
             <aside className="flex md:col-span-1 bg-gray-50">
@@ -113,7 +172,7 @@ export default function Cart() {
                   {/*Configurar costos de envio: Pendiente*/}
                   <div>Envio: 5000</div>
                 <button
-                onClick={() => router.push('/checkout')}
+                onClick={() => router.push('/cart/checkout')}
                 className="mt-18 w-full bg-black text-white py-2 rounded bottom-5 inset-x-0"
                 >
                 Ir a Checkout
