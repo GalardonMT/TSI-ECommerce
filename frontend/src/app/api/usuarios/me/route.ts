@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { extractAccessToken } from '@/lib/auth/serverTokens';
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'http://localhost:8000';
 
@@ -19,7 +20,12 @@ function buildHeaders(req: Request, extra: Record<string,string> = {}) {
   const authHeader = req.headers.get('authorization');
   const headers: Record<string,string> = { ...extra };
   if (cookieHeader) headers.cookie = cookieHeader;
-  if (authHeader) headers.Authorization = authHeader;
+  if (authHeader) {
+    headers.Authorization = authHeader;
+  } else {
+    const token = extractAccessToken({ headers: req.headers });
+    if (token) headers.Authorization = `Bearer ${token}`;
+  }
   return headers;
 }
 

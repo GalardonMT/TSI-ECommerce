@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 import { getDisplayEmail, userIsEmpleado } from "../../../app/api/auth/login/headerUtils";
-import { clearTokens, persistTokens } from "../../../app/api/auth/login/tokenStorage";
+import { clearTokens } from "../../../app/api/auth/login/tokenStorage";
 
 type HeaderAuthMenuProps = {
   user: any | null;
@@ -52,16 +52,23 @@ export default function HeaderAuthMenu({ user, onUserChange, pathname }: HeaderA
 
       if (response.ok) {
         const data = await response.json();
-        persistTokens({ access: data.access, refresh: data.refresh, token: data.token });
+        clearTokens();
 
-        const returnedUser = data.user ?? (data.email ? { email: data.email } : { email });
+        const returnedUser = data?.user ?? (data?.email ? { email: data.email } : { email });
         const augmentedUser = {
           ...returnedUser,
           is_empleado: userIsEmpleado(returnedUser),
         };
 
         onUserChange(augmentedUser);
+        try {
+          localStorage.setItem("auth", JSON.stringify({ user: augmentedUser }));
+        } catch {
+          /* ignore */
+        }
         setOpen(false);
+        setEmail("");
+        setPassword("");
         return;
       }
 
@@ -73,17 +80,25 @@ export default function HeaderAuthMenu({ user, onUserChange, pathname }: HeaderA
       const text = await response.text();
       setLoginError(`Error al iniciar sesión: ${text || response.statusText}`);
     } catch (error) {
-      console.warn("login request failed, using mock login", error);
-      const fallbackUser = { email, is_empleado: userIsEmpleado({ email }) };
-      onUserChange(fallbackUser);
-      setOpen(false);
+      console.error("login request failed", error);
+      setLoginError("No se pudo contactar al servidor de autenticación.");
     } finally {
       setLoggingIn(false);
     }
   };
 
   const handleLogout = () => {
+    fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => undefined);
+
     onUserChange(null);
+    try {
+      localStorage.removeItem("auth");
+    } catch {
+      /* ignore */
+    }
     setEmail("");
     setPassword("");
     setShowPassword(false);

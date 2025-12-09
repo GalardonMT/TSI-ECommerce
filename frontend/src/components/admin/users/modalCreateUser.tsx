@@ -5,20 +5,54 @@ export default function ModalCreateUser({ onClose, onCreate }: { onClose: () => 
   const [email, setEmail] = useState('');
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
+  const [apellidoMaterno, setApellidoMaterno] = useState('');
+  const [rut, setRut] = useState('');
+  const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
   const [isSuper, setIsSuper] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function normalizePhone(value: string) {
+    return value.replace(/\D+/g, '');
+  }
+
+  function extractErrorMessage(data: any): string {
+    if (!data) return 'Error creando usuario.';
+    if (typeof data === 'string') return data;
+    if (Array.isArray(data)) return data.join(', ');
+    if (typeof data.detail === 'string') return data.detail;
+    const firstKey = Object.keys(data)[0];
+    if (!firstKey) return 'Error creando usuario.';
+    const value = data[firstKey];
+    if (Array.isArray(value)) return value.join(', ');
+    if (typeof value === 'string') return `${firstKey}: ${value}`;
+    return 'Error creando usuario.';
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
+      const trimmedEmail = email.trim();
+      const trimmedNombre = nombre.trim();
+      const trimmedApellido = apellido.trim();
+      const trimmedRut = rut.trim();
+      const cleanedPhone = normalizePhone(telefono);
+
+      if (!trimmedEmail || !trimmedNombre || !trimmedApellido || !trimmedRut || !cleanedPhone || !password) {
+        setError('Completa todos los campos obligatorios.');
+        return;
+      }
+
       const payload = {
-        correo: email,
-        nombre,
-        apellido_paterno: apellido,
+        correo: trimmedEmail,
+        nombre: trimmedNombre,
+        apellido_paterno: trimmedApellido,
+        apellido_materno: apellidoMaterno.trim() || '',
+        rut: trimmedRut,
+        telefono: cleanedPhone,
         password,
         password_confirm: password,
         is_staff: true,
@@ -26,8 +60,17 @@ export default function ModalCreateUser({ onClose, onCreate }: { onClose: () => 
       };
       const res = await onCreate(payload);
       if (!res.ok) {
-        setError(res.data?.detail || 'Error creating user');
+        setError(extractErrorMessage(res.data));
+        return;
       }
+      setEmail('');
+      setNombre('');
+      setApellido('');
+      setApellidoMaterno('');
+      setRut('');
+      setTelefono('');
+      setPassword('');
+      setIsSuper(false);
     } catch (err: any) {
       setError(String(err?.message || err));
     } finally {
@@ -52,6 +95,24 @@ export default function ModalCreateUser({ onClose, onCreate }: { onClose: () => 
           <div>
             <label className="block text-sm">Apellido</label>
             <input className="w-full border p-2 rounded" value={apellido} onChange={(e) => setApellido(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm">Apellido materno (opcional)</label>
+            <input className="w-full border p-2 rounded" value={apellidoMaterno} onChange={(e) => setApellidoMaterno(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm">RUT</label>
+            <input className="w-full border p-2 rounded" value={rut} onChange={(e) => setRut(e.target.value)} placeholder="12345678-9" />
+          </div>
+          <div>
+            <label className="block text-sm">Teléfono</label>
+            <input
+              className="w-full border p-2 rounded"
+              value={telefono}
+              onChange={(e) => setTelefono(normalizePhone(e.target.value))}
+              placeholder="Solo dígitos"
+              inputMode="numeric"
+            />
           </div>
           <div>
             <label className="block text-sm">Password</label>
