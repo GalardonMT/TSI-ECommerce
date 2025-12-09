@@ -78,7 +78,7 @@ export default function Hero() {
                   )}
 
                   {/* Título */}
-                  <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold uppercase text-white leading-[1.1] tracking-wide whitespace-pre-line font-Sansation drop-shadow-lg max-w-5xl mx-auto animate-in fade-in zoom-in-95 duration-1000">
+                  <h1 className="text-4xl md:text-6xl lg:text-7xl uppercase text-white leading-[1.1] tracking-wide whitespace-pre-line font-Sansation drop-shadow-lg max-w-5xl mx-auto animate-in fade-in zoom-in-95 duration-1000">
                     {slide.title}
                   </h1>
 
@@ -86,7 +86,7 @@ export default function Hero() {
                   {slide.hasButton && (
                     <div className="mt-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
                       <Link href={slide.buttonLink || '#'}>
-                        <button className="bg-white text-black px-10 py-4 text-sm font-bold uppercase tracking-widest hover:bg-gray-200 transition-transform duration-300 hover:scale-105 shadow-xl rounded-none">
+                        <button className="bg-white text-black px-10 py-4 text-sm font-bold uppercase tracking-widest hover:bg-amber-200 transition-transform duration-300 hover:scale-105 shadow-xl rounded-none">
                           {slide.buttonText}
                         </button>
                       </Link>

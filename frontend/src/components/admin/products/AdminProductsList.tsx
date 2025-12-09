@@ -98,6 +98,9 @@ export default function AdminProductsList({ products, categories }: Props) {
               <th className="p-3 w-40">Categoría</th>
               <th className="p-3 w-28">Precio</th>
               <th className="p-3 w-24">Stock</th>
+              {/* Nueva columna para ver si es destacado */}
+              <th className="p-3 w-24">Destacado</th>
+              <th className="p-3 w-28">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -108,8 +111,6 @@ export default function AdminProductsList({ products, categories }: Props) {
                   <td className="p-3 align-top">{p.id || p.id_producto}</td>
                   <td className="p-3 align-top">
                     {img ? (
-                      // image may be data URL or absolute URL
-                      // constrain size
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={img} alt={p.nombre || ''} className="h-16 w-16 object-cover rounded" />
                     ) : (
@@ -117,13 +118,30 @@ export default function AdminProductsList({ products, categories }: Props) {
                     )}
                   </td>
                   <td className="p-3 align-top">{p.nombre}</td>
-                  <td className="p-3 align-top text-sm text-gray-700">{p.descripcion}</td>
+                  <td 
+                    className="p-3 align-top text-sm text-gray-700 max-w-[200px] truncate" 
+                    title={p.descripcion} // Tooltip para ver todo al pasar el mouse
+                  >
+                    {p.descripcion}
+                  </td>
                   <td className="p-3 align-top text-sm text-gray-700">{p.categoria_nombre || 'Sin categoría'}</td>
                   <td className="p-3 align-top">{fmtPrice(Number(p.precio || 0))}</td>
                   <td className="p-3 align-top">{p.stock_disponible ?? p.stock ?? 0}</td>
+                  
+                  {/* Nueva celda para mostrar el estado de destacado */}
+                  <td className="p-3 align-top">
+                    {p.destacado ? (
+                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-bold">
+                        Sí
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-xs">No</span>
+                    )}
+                  </td>
+
                   <td className="p-3 align-top">
                     <div className="flex gap-2">
-                      <button onClick={() => setEditing(p)} className="text-sm px-2 py-1 border rounded">Editar</button>
+                      <button onClick={() => setEditing(p)} className="text-sm px-2 py-1 border rounded hover:bg-gray-50">Editar</button>
                       <button
                         onClick={async () => {
                           if (!confirm('Eliminar este producto?')) return;
@@ -131,7 +149,7 @@ export default function AdminProductsList({ products, categories }: Props) {
                           if (res.ok) setItems((s) => s.filter((x) => (x.id || x.id_producto) !== (p.id || p.id_producto)));
                           else alert('Error eliminando producto');
                         }}
-                        className="text-sm px-2 py-1 border rounded text-red-600"
+                        className="text-sm px-2 py-1 border rounded text-red-600 hover:bg-red-50"
                       >
                         Eliminar
                       </button>
@@ -142,7 +160,7 @@ export default function AdminProductsList({ products, categories }: Props) {
             })}
             {filteredItems.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-gray-500">No hay productos</td>
+                <td colSpan={9} className="p-6 text-center text-gray-500">No hay productos</td>
               </tr>
             )}
           </tbody>
@@ -153,7 +171,6 @@ export default function AdminProductsList({ products, categories }: Props) {
         <ModalCreateProduct
           onClose={() => setOpen(false)}
           onCreated={(data) => {
-            // If backend returns created product, append to list
             if (data) setItems((s) => [data, ...s]);
             setOpen(false);
           }}

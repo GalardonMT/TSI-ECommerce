@@ -28,6 +28,7 @@ class ProductoSerializer(serializers.ModelSerializer):
             "precio",
             "stock_disponible",
             "imagenes",
+            "destacado"
         ]
 
     def create(self, validated_data):
