@@ -35,6 +35,7 @@ export default function ModalDeleteCategory({ categories, onClose, onDeleted }: 
         setError("No se pudo eliminar la categoría");
         return;
       }
+      window.location.reload();
       onDeleted?.(Number(selectedId));
       onClose?.();
     } catch (err) {

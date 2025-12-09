@@ -7,6 +7,10 @@ from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate, login
 from django.utils import timezone
+from django.conf import settings
+from django.core.mail import send_mail
+from datetime import timedelta
+import secrets
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,6 +25,7 @@ from .serializers import (
     UpdateUserSerializer,
     get_tokens_for_user,
 )
+from .models import PasswordResetToken
 
 User = get_user_model()
 
@@ -104,6 +109,78 @@ class LoginAPIView(APIView):
             "refresh": tokens.get("refresh"),
             "last_login_db": str(refreshed.last_login) if getattr(refreshed, 'last_login', None) else None,
         }, status=status.HTTP_200_OK)
+
+
+class PasswordResetRequestView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        correo = request.data.get("correo") or request.data.get("email") or ""
+        if not correo:
+            return Response({"detail": "Correo requerido"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.filter(correo__iexact=correo).first()
+        # Always respond success to avoid leaking valid emails
+        if not user:
+            return Response({"detail": "Si el correo existe, enviaremos instrucciones"}, status=status.HTTP_200_OK)
+
+        # Invalidate old tokens for this user
+        PasswordResetToken.objects.filter(usuario=user, used=False, expires_at__lte=timezone.now()).update(used=True, used_at=timezone.now())
+
+        token = secrets.token_urlsafe(32)
+        expires_at = timezone.now() + timedelta(minutes=30)
+        PasswordResetToken.objects.create(usuario=user, token=token, expires_at=expires_at)
+
+        frontend_base = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
+        reset_link = f"{frontend_base.rstrip('/')}/reset-password?token={token}"
+
+        subject = "Recupera tu contraseña"
+        message = (
+            "Recibimos una solicitud para restablecer tu contraseña.\n"
+            f"Usa este enlace (válido por 30 minutos): {reset_link}\n\n"
+            "Si no solicitaste este cambio, ignora este mensaje."
+        )
+
+        send_mail(
+            subject,
+            message,
+            getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@tsi-ecommerce.local'),
+            [user.correo],
+            fail_silently=True,
+        )
+
+        return Response({"detail": "Si el correo existe, enviaremos instrucciones"}, status=status.HTTP_200_OK)
+
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        token_value = request.data.get("token")
+        password = request.data.get("password")
+        if not token_value or not password:
+            return Response({"detail": "Token y contraseña son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
+
+        token_obj = (
+            PasswordResetToken.objects.select_related("usuario")
+            .filter(token=token_value, used=False, expires_at__gt=timezone.now())
+            .first()
+        )
+        if not token_obj:
+            return Response({"detail": "Token inválido o expirado"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = token_obj.usuario
+        user.set_password(password)
+        user.save(update_fields=["password"])
+
+        token_obj.used = True
+        token_obj.used_at = timezone.now()
+        token_obj.save(update_fields=["used", "used_at"])
+
+        # Invalidate other active tokens for this user
+        PasswordResetToken.objects.filter(usuario=user, used=False).update(used=True, used_at=timezone.now())
+
+        return Response({"detail": "Contraseña actualizada"}, status=status.HTTP_200_OK)
 
 
 from rest_framework import viewsets

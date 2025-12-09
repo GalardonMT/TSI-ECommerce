@@ -131,4 +131,20 @@ class Empleado(models.Model):
 
     def __str__(self):
         return f"Empleado: {self.usuario.nombre} {self.usuario.apellido_paterno} ({self.cargo})"
+
+
+class PasswordResetToken(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="password_resets")
+    token = models.CharField(max_length=255, unique=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "PASSWORD_RESET_TOKEN"
+
+    def __str__(self):
+        return f"ResetToken for {self.usuario_id} (used={self.used})"
     

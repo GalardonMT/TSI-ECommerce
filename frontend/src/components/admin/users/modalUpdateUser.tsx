@@ -5,6 +5,9 @@ export default function ModalUpdateUser({ user, onClose, onUpdate }: { user: any
   const [email, setEmail] = useState(user.correo || '');
   const [nombre, setNombre] = useState(user.nombre || '');
   const [apellido, setApellido] = useState(user.apellido_paterno || '');
+  const [apellidoMaterno, setApellidoMaterno] = useState(user.apellido_materno || '');
+  const [rut, setRut] = useState(user.rut || '');
+  const [telefono, setTelefono] = useState(user.telefono || '');
   const [isSuper, setIsSuper] = useState(!!user.is_superuser);
   const [isActive, setIsActive] = useState(!!user.is_active);
   const [loading, setLoading] = useState(false);
@@ -13,17 +16,32 @@ export default function ModalUpdateUser({ user, onClose, onUpdate }: { user: any
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!email || !nombre || !apellido || !rut || !telefono) {
+      setError('Correo, nombre, apellido, RUT y teléfono son obligatorios');
+      return;
+    }
     setLoading(true);
     try {
       const payload: any = {
         correo: email,
         nombre,
         apellido_paterno: apellido,
+        apellido_materno: apellidoMaterno,
+        rut,
+        telefono,
         is_superuser: isSuper,
         is_active: isActive,
+        // keep existing staff flag to avoid unintended role changes
+        is_staff: !!user.is_staff,
       };
       const res = await onUpdate(user.id, payload);
-      if (!res.ok) setError(res.data?.detail || 'Error updating user');
+      if (!res.ok) {
+        const firstFieldError = res.data && typeof res.data === 'object'
+          ? Object.values(res.data)[0]
+          : null;
+        const msg = Array.isArray(firstFieldError) ? firstFieldError[0] : firstFieldError;
+        setError((res.data?.detail as string) || (res.data?.error as string) || (msg as string) || 'Error updating user');
+      }
     } catch (err: any) {
       setError(String(err?.message || err));
     } finally {
@@ -48,6 +66,18 @@ export default function ModalUpdateUser({ user, onClose, onUpdate }: { user: any
           <div>
             <label className="block text-sm">Apellido</label>
             <input className="w-full border p-2 rounded" value={apellido} onChange={(e) => setApellido(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm">Apellido materno</label>
+            <input className="w-full border p-2 rounded" value={apellidoMaterno} onChange={(e) => setApellidoMaterno(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm">RUT</label>
+            <input className="w-full border p-2 rounded" value={rut} onChange={(e) => setRut(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm">Teléfono</label>
+            <input className="w-full border p-2 rounded" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
           </div>
 
           <div className="flex items-center gap-3">

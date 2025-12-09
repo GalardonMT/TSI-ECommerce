@@ -27,6 +27,7 @@ class Reserva(models.Model):
 
     fecha_creacion = models.DateField(auto_now_add=True)
     fecha_reserva = models.DateField()
+    ultima_actividad = models.DateTimeField(default=timezone.now)
 
     ESTADO_OPCIONES = [
         ('CARRO', 'Carro'),
