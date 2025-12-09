@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { addCartItem } from "@/app/api/cart/addItem";
 // import { productsData } from "@/data/products"; // <--- YA NO USAMOS ESTO
 
@@ -22,11 +22,13 @@ type ProductDetail = {
 export default function ProductDetailPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const router = useRouter();
 
   // ESTADOS
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [buying, setBuying] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"description" | "shipping">("description");
 
@@ -37,8 +39,12 @@ export default function ProductDetailPage() {
     try {
       const resp = await addCartItem(product.id, 1);
       if (!resp.ok) {
-        const detail = resp.data?.detail || "No se pudo agregar al carrito";
-        setAddError(detail);
+        if (resp.status === 401) {
+          setAddError("Debes iniciar sesión para comprar.");
+        } else {
+          const detail = resp.data?.detail || "No se pudo agregar al carrito";
+          setAddError(detail);
+        }
       } else {
         setProduct((prev) => (prev ? { ...prev, stock: Math.max(0, prev.stock - 1) } : prev));
       }
@@ -46,6 +52,29 @@ export default function ProductDetailPage() {
       setAddError("Error de conexión al agregar al carrito");
     } finally {
       setAdding(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!product) return;
+    setAddError(null);
+    setBuying(true);
+    try {
+      const resp = await addCartItem(product.id, 1);
+      if (!resp.ok) {
+        if (resp.status === 401) {
+          setAddError("Debes iniciar sesión para comprar.");
+        } else {
+          const detail = resp.data?.detail || "No se pudo agregar al carrito";
+          setAddError(detail);
+        }
+        return;
+      }
+      router.push("/cart");
+    } catch (err) {
+      setAddError("Error de conexión al agregar al carrito");
+    } finally {
+      setBuying(false);
     }
   };
 
@@ -185,8 +214,12 @@ export default function ProductDetailPage() {
             >
               {adding ? "Agregando..." : product.stock <= 0 ? "Sin stock" : "Agregar al carro"}
             </button>
-            <button className="w-full py-3 px-6 bg-black text-white rounded-md font-medium hover:bg-gray-800 transition-colors shadow-sm">
-              Comprar ahora
+            <button
+              disabled={buying || product.stock <= 0}
+              onClick={handleBuyNow}
+              className="w-full py-3 px-6 bg-black text-white rounded-md font-medium hover:bg-gray-800 transition-colors shadow-sm disabled:opacity-60"
+            >
+              {buying ? "Procesando..." : "Comprar ahora"}
             </button>
           </div>
           {/* Mostramos el stock real de Django */}
