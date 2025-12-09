@@ -146,8 +146,11 @@ export default function AdminProductsList({ products, categories }: Props) {
                         onClick={async () => {
                           if (!confirm('Eliminar este producto?')) return;
                           const res = await deleteProduct(p.id || p.id_producto);
-                          if (res.ok) setItems((s) => s.filter((x) => (x.id || x.id_producto) !== (p.id || p.id_producto)));
-                          else alert('Error eliminando producto');
+                          if (res.ok) {
+                            window.location.reload();
+                            return;
+                          }
+                          alert(res.error || 'No se pudo eliminar el producto. Intente nuevamente.');
                         }}
                         className="text-sm px-2 py-1 border rounded text-red-600 hover:bg-red-50"
                       >

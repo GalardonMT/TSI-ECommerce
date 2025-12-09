@@ -5,8 +5,9 @@ export async function deleteProduct(id: number | string) {
       method: 'DELETE',
       credentials: 'include'
     });
-    if (!res.ok) return { ok: false, status: res.status };
-    return { ok: true, status: res.status };
+    const data = await res.json().catch(() => null);
+    if (!res.ok) return { ok: false, status: res.status, error: data?.detail || data?.message || data?.error };
+    return { ok: true, status: res.status, data };
   } catch (err: any) {
     return { ok: false, status: 0, error: String(err?.message || err) };
   }

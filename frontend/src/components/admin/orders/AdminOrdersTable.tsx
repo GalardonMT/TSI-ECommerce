@@ -104,6 +104,25 @@ export default function AdminOrdersTable() {
     }
   }
 
+  async function deleteReserva(id_reserva: number) {
+    const ok = confirm(`¿Eliminar la reserva #${id_reserva}? Esta acción no se puede deshacer.`);
+    if (!ok) return;
+    try {
+      const res = await fetch(`/api/admin/orders?id_reserva=${id_reserva}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok && res.status !== 204) {
+        const data = await res.json().catch(() => null);
+        alert(data?.detail || "No se pudo eliminar la reserva");
+        return;
+      }
+      window.location.reload();
+    } catch (err) {
+      alert("Error de conexión al eliminar");
+    }
+  }
+
   // Reset page when filters or search change so we don't land on an empty page
   useEffect(() => {
     setPage(1);
@@ -240,6 +259,12 @@ export default function AdminOrdersTable() {
                 className="text-sm border rounded px-2 py-1 bg-gray-100 hover:bg-gray-200"
               >
                 {expanded[reserva.id_reserva] ? "Ocultar cliente" : "Ver cliente"}
+              </button>
+              <button
+                onClick={() => deleteReserva(reserva.id_reserva)}
+                className="text-sm border rounded px-2 py-1 bg-red-50 text-red-700 hover:bg-red-100"
+              >
+                Eliminar
               </button>
               <span className="text-sm text-gray-600">Estado:</span>
               <select

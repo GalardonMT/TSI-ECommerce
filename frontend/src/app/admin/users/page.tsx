@@ -55,7 +55,10 @@ export default function AdminUsersPage() {
 
   async function handleDelete(id: number) {
     const res = await deleteUser(id);
-    if (res.ok) await load();
+    if (res.ok) {
+      window.location.reload();
+      return res;
+    }
     return res;
   }
 
