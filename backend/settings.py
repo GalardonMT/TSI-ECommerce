@@ -29,7 +29,12 @@ SECRET_KEY = 'django-insecure-i%4ka$s9+&4#+7-8%ws^kg$wcnut+nrq=zyg#&qvg1a0^4q5d^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["tsi-ecommerce.onrender.com"]
+ALLOWED_HOSTS = [
+    "tsi-ecommerce.onrender.com",  # Render backend URL
+    "tsi-e-commerce.vercel.app",   # Vercel frontend URL
+    "localhost",
+    "127.0.0.1",
+]
 
 
 # Application definition
