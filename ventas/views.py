@@ -208,7 +208,7 @@ class CarritoView(APIView):
 
             # Notify store owner about new order
             try:
-                owner_email = 'cvivar@utem.cl'
+                owner_email = 'tsiprueba75@gmail.com'
                 subject_owner = f"Nueva reserva creada #{reserva.id_reserva}"
                 total_owner = sum(d.cantidad * d.precio_unitario for d in reserva.detalles.all())
                 user = getattr(reserva, 'usuario', None)
