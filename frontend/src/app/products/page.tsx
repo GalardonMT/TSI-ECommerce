@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation"; // <--- Importar esto
 import ProductList, { ProductFrontend } from "@/components/products/productList";
 import FilterSidebar from "@/components/products/sideBar";
 
-export default function ProductsPage() {
+// Componente interno que maneja la lógica de búsqueda
+function ProductContent() {
+  const searchParams = useSearchParams(); // <--- Hook para leer la URL
+  
   // ESTADOS
   const [products, setProducts] = useState<ProductFrontend[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -13,36 +17,40 @@ export default function ProductsPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<string>("default");
 
-  // CARGAR DATOS DE DJANGO
+  // 1. DETECTAR CATEGORÍA DESDE URL (AL CARGAR)
+  useEffect(() => {
+    const categoryParam = searchParams.get("category");
+    if (categoryParam) {
+      // Si hay categoría en la URL, la marcamos como seleccionada
+      setSelectedCategories([categoryParam]);
+    }
+  }, [searchParams]);
+
+  // 2. CARGAR DATOS DE DJANGO
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Categorías
+        // 1. Categorías
         const resCat = await fetch("http://127.0.0.1:8000/api/inventario/categoria/");
         const dataCat = await resCat.json();
         const catNames = dataCat.map((c: any) => c.nombre);
         setCategories(catNames);
 
-        // Productos
+        // 2. Productos
         const resProd = await fetch("http://127.0.0.1:8000/api/inventario/producto/");
         const dataProd = await resProd.json();
         
         // Procesar datos (Mapeo de Django a React)
         const formattedProducts = dataProd.map((item: any) => {
-           let imagenUrl = "https://via.placeholder.com/300"; // Placeholder por defecto
+           let imagenUrl = "https://via.placeholder.com/300";
            
            if (item.imagenes && item.imagenes.length > 0) {
              const ruta = item.imagenes[0].image || "";
-
              if (ruta.startsWith('http') || ruta.startsWith('data:')) {
                imagenUrl = ruta;
-             } 
-      
-             else if (ruta.length > 300) {
+             } else if (ruta.length > 300) {
                imagenUrl = `data:image/jpeg;base64,${ruta}`;
-             }
-            
-             else {
+             } else {
                imagenUrl = `http://127.0.0.1:8000${ruta.startsWith('/') ? '' : '/'}${ruta}`;
              }
            }
@@ -72,19 +80,14 @@ export default function ProductsPage() {
   // LÓGICA DE FILTRADO Y ORDEN 
   const processedProducts = products
     .filter(product => {
-      // Si no hay filtros, mostrar todo
       if (selectedCategories.length === 0) return true;
-      // Comparamos con la categoría real de Django
       return selectedCategories.includes(product.category);
     })
     .sort((a, b) => {
       switch (sortOption) {
-        case 'price-asc':
-          return a.price - b.price; 
-        case 'price-desc':
-          return b.price - a.price;
-        default:
-          return 0;
+        case 'price-asc': return a.price - b.price; 
+        case 'price-desc': return b.price - a.price;
+        default: return 0;
       }
     });
 
@@ -104,8 +107,6 @@ export default function ProductsPage() {
 
   return ( 
     <div className="container mx-auto py-16 px-4">
-      
-      {/* Título y Dropdown de Orden */}
       <div className="flex justify-between items-center mb-12">
         <h1 className="text-3xl font-bold text-left">Productos</h1>
         <select
@@ -119,21 +120,25 @@ export default function ProductsPage() {
         </select>
       </div>
 
-      {/* Layout de 2 Columnas */}
       <div className="flex flex-col lg:flex-row gap-8">
-        
-        {/* --- Columna Izquierda (Sidebar) --- */}
         <FilterSidebar
-          categories={categories} // Viene de la API ahora
+          categories={categories} 
           selectedCategories={selectedCategories}
           onFilterChange={handleFilterChange}
         />
-
-        {/* --- Columna Derecha (Lista) --- */}
         <div className="w-full lg:w-3/4">
           <ProductList products={processedProducts} />
         </div>
       </div>
     </div>
+  );
+}
+
+// Exportamos envuelto en Suspense para evitar errores de build en Next.js
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="text-center py-24">Cargando...</div>}>
+      <ProductContent />
+    </Suspense>
   );
 }

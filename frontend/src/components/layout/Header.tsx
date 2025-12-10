@@ -161,8 +161,9 @@ export default function Header() {
     setOpenSearch(false);
   }, [pathname]);
 
-  const handleCategoryNavigate = (categoryId: number) => {
-    router.push(`/products?categoria=${categoryId}`);
+  // CORRECCIÓN 1: Recibir el nombre y usar 'category' en la URL
+  const handleCategoryNavigate = (categoryName: string) => {
+    router.push(`/products?category=${encodeURIComponent(categoryName)}`);
   };
 
   return (
@@ -173,7 +174,9 @@ export default function Header() {
         } text-white`}
       >
         <div className="w-full px-6 lg:px-16 h-full flex justify-between lg:grid lg:grid-cols-3 items-center max-w-[1920px] mx-auto">
-          <div className="flex items-center">
+          
+          {/* COLUMNA IZQUIERDA (Menú + Links) */}
+          <div className="flex items-center h-full">
             <button
               className="lg:hidden mr-4"
               onClick={() => setMobileMenuOpen(true)}
@@ -184,17 +187,21 @@ export default function Header() {
               </svg>
             </button>
 
-            <nav className="hidden lg:flex justify-start items-center gap-8 text-base font-medium tracking-wide">
-              <Link href="/" className="hover:text-gray-300 transition-colors">
+            {/* NAV DESKTOP - CORRECCIÓN DE ALINEACIÓN */}
+            <nav className="hidden lg:flex justify-start items-center gap-8 text-base font-medium tracking-wide h-full">
+              
+              {/* Inicio */}
+              <Link href="/" className="h-full flex items-center hover:text-gray-300 transition-colors">
                 Inicio
               </Link>
 
+              {/* Dropdown Productos */}
               <div
                 className="relative h-full flex items-center"
                 onMouseEnter={() => setIsProductsHover(true)}
                 onMouseLeave={() => setIsProductsHover(false)}
               >
-                <button className="flex items-center gap-1 hover:text-gray-300 transition-colors py-6">
+                <button className="h-full flex items-center  hover:text-gray-300 transition-colors">
                   Productos
                   <svg
                     className={`w-4 h-4 transition-transform stroke-current fill-none ${
@@ -220,7 +227,8 @@ export default function Header() {
                     {categories.map((category) => (
                       <button
                         key={category.id_categoria}
-                        onClick={() => handleCategoryNavigate(category.id_categoria)}
+                        // Usamos el nombre para navegar
+                        onClick={() => handleCategoryNavigate(category.nombre)}
                         className="px-5 py-2 hover:bg-gray-100 hover:text-[#151515] transition-colors text-left text-sm"
                       >
                         {category.nombre}
@@ -230,12 +238,14 @@ export default function Header() {
                 </div>
               </div>
 
-              <Link href="/contacto" className="hover:text-gray-300 transition-colors">
+              {/* Contacto */}
+              <Link href="/contacto" className="h-full flex items-center hover:text-gray-300 transition-colors">
                 Contacto
               </Link>
             </nav>
           </div>
 
+          {/* COLUMNA CENTRO (Logo) */}
           <div className="flex justify-center">
             <Link
               href="/"
@@ -245,6 +255,7 @@ export default function Header() {
             </Link>
           </div>
 
+          {/* COLUMNA DERECHA (Iconos) */}
           <div className="flex justify-end items-center gap-4 lg:gap-6">
             <button
               ref={searchToggleRef}

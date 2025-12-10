@@ -42,7 +42,6 @@ export default function CategoryCarousel() {
   if (categories.length === 0) return null;
 
   return (
-    // Aumentamos el padding lateral (px-12) para dejar espacio a las flechas externas
     <section className="container mx-auto py-12 px-12 md:px-16">
       <h2 className="text-3xl mb-8 text-gray-900 uppercase tracking-tight text-center md:text-center">
         Mas productos
@@ -60,8 +59,9 @@ export default function CategoryCarousel() {
           <CarouselContent className="-ml-4">
             {categories.map((cat) => (
               <CarouselItem key={cat.id_categoria} className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
+                {/* CAMBIO AQUÍ: Enviamos el nombre (encodeURIComponent es vital por si tiene espacios) */}
                 <Link 
-                  href={`/products?category=${cat.id_categoria}`}
+                  href={`/products?category=${encodeURIComponent(cat.nombre)}`}
                   className="group/card block relative overflow-hidden rounded-lg bg-gray-100 hover:shadow-lg transition-all duration-300 h-40"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-black opacity-90 group-hover/card:opacity-100 transition-opacity" />
