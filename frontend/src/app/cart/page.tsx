@@ -168,9 +168,8 @@ export default function Cart() {
             <aside className="flex md:col-span-1 bg-gray-50">
               <div className="self-center w-full rounded border p-2">
                 <div className="text-lg font-semibold">Resumen</div>
-                  <div className="mt-4 text-2xl font-bold">Total: ${total.toLocaleString()}</div>
-                  {/*Configurar costos de envio: Pendiente*/}
-                  <div>Envio: 5000</div>
+                  <div className="mt-4 text-2xl font-bold ">Total: ${total.toLocaleString()}</div>
+                  <div className="mt-4">+ envío</div>
                 <button
                 onClick={() => router.push('/cart/checkout')}
                 className="mt-18 w-full bg-black text-white py-2 rounded bottom-5 inset-x-0"
