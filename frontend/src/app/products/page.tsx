@@ -6,14 +6,14 @@ import FilterSidebar from "@/components/products/sideBar";
 
 export default function ProductsPage() {
   // ESTADOS
-  const [products, setProducts] = useState<ProductFrontend[]>([]); // Lista maestra de la API
-  const [categories, setCategories] = useState<string[]>([]);      // Categorías de la API
+  const [products, setProducts] = useState<ProductFrontend[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<string>("default");
 
-  //CARGAR DATOS DE DJANGO
+  // CARGAR DATOS DE DJANGO
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -29,13 +29,22 @@ export default function ProductsPage() {
         
         // Procesar datos (Mapeo de Django a React)
         const formattedProducts = dataProd.map((item: any) => {
-           let imagenUrl = "https://via.placeholder.com/300";
+           let imagenUrl = "https://via.placeholder.com/300"; // Placeholder por defecto
            
            if (item.imagenes && item.imagenes.length > 0) {
-             const ruta = item.imagenes[0].image;
-             imagenUrl = ruta.startsWith('http') 
-               ? ruta 
-               : `http://127.0.0.1:8000${ruta.startsWith('/') ? '' : '/'}${ruta}`;
+             const ruta = item.imagenes[0].image || "";
+
+             if (ruta.startsWith('http') || ruta.startsWith('data:')) {
+               imagenUrl = ruta;
+             } 
+      
+             else if (ruta.length > 300) {
+               imagenUrl = `data:image/jpeg;base64,${ruta}`;
+             }
+            
+             else {
+               imagenUrl = `http://127.0.0.1:8000${ruta.startsWith('/') ? '' : '/'}${ruta}`;
+             }
            }
 
            return {

@@ -3,11 +3,10 @@ import Link from 'next/link';
 export default function Footer() {
   return (
     <footer className="w-full bg-[#151515] text-white pt-16 pb-8 mt-auto border-t border-neutral-800">
-      
-      <div className="container mx-auto px-6 md:px-16 grid grid-cols-1 md:grid-cols-3 gap-12 text-left">
+      <div className="container mx-auto px-6 md:px-16 grid grid-cols-1 md:grid-cols-2 gap-12 text-left justify-items-center">
         
         {/* INFORMACIÓN */}
-        <div>
+        <div className="w-full max-w-xs"> 
           <h2 className="text-base font-bold uppercase tracking-widest mb-6 font-Sansation">Información</h2>
           <ul className="space-y-3 text-sm text-gray-400">
             <li>
@@ -20,29 +19,27 @@ export default function Footer() {
               <Link href="/terms" className="hover:text-white transition-colors">Términos y Condiciones</Link>
             </li>
             <li className="flex items-start gap-2 pt-2">
-              {/* Icono Map Pin (Línea -> stroke) */}
               <svg className="w-4 h-4 flex-shrink-0 mt-0.5 text-white fill-none stroke-current">
                 <use xlinkHref="/sprites.svg#icon-map-pin" />
               </svg>
               <span>Carretera General San Martín 3047</span>
             </li>
             <li className="opacity-80 leading-relaxed text-xs">
-              Horario: Lunes a Viernes, 9:00 - 18:00
+              {/* Horario: Lunes a Viernes, 9:00 - 18:00 */}
             </li>
           </ul>
 
           <div className="mt-8">
             <p className="text-xs font-bold uppercase tracking-wider text-white mb-4">Síguenos</p>
             <div className="flex gap-4">
-              {/* Iconos Redes (Sólidos -> fill) */}
-              <a href="#" className="hover:opacity-80 transition-opacity">
+              <a 
+                href="https://www.instagram.com/pronanochile/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="hover:opacity-80 transition-opacity"
+              >
                 <svg className="w-6 h-6 fill-current text-white">
                   <use xlinkHref="/sprites.svg#instagram-icon" />
-                </svg>
-              </a>
-              <a href="#" className="hover:opacity-80 transition-opacity">
-                <svg className="w-6 h-6 fill-current text-white">
-                  <use xlinkHref="/sprites.svg#facebook-icon" />
                 </svg>
               </a>
             </div>
@@ -50,36 +47,22 @@ export default function Footer() {
         </div>
 
         {/* CONTACTO */}
-        <div>
+        <div className="w-full max-w-xs">
           <h2 className="text-base font-bold uppercase tracking-widest mb-6 font-Sansation">Contacto</h2>
           <ul className="space-y-4 text-sm text-gray-400">
             <li>
-              <span className="block text-xs uppercase font-bold text-white mb-1">Email</span>
-              <a href="mailto:contacto@ejemplo.com" className="hover:text-white transition-colors">contacto@ejemplo.com</a>
+              <span className="block text-xs uppercase font-bold text-white mb-1">Perla Cid</span>
+              <a href="mailto:Perla.cid@pronanochile.cl" className="hover:text-white transition-colors">Perla.cid@pronanochile.cl</a>
             </li>
             <li>
-              <span className="block text-xs uppercase font-bold text-white mb-1">Teléfono</span>
-              <a href="tel:+56912345678" className="hover:text-white transition-colors">+56 9 1234 5678</a>
+              <span className="block text-xs uppercase font-bold text-white mb-1">Felipe Saffie</span>
+              <a href="mailto:Felipe.saffie@pronanochile.cl" className="hover:text-white transition-colors">Felipe.saffie@pronanochile.cl</a>
+            </li>
+            <li>
+              <span className="block text-xs uppercase font-bold text-white mb-1">Contacto General</span>
+              <a href="mailto:Contacto@pronanochile.cl" className="hover:text-white transition-colors">Contacto@pronanochile.cl</a>
             </li>
           </ul>
-        </div>
-
-        {/* SUSCRIBIRSE */}
-        <div>
-          <h2 className="text-base font-bold uppercase tracking-widest mb-6 font-Sansation">Suscribirse</h2>
-          <p className="text-xs text-gray-400 mb-4">Recibe novedades y ofertas exclusivas.</p>
-          
-          <div className="flex flex-col gap-3">
-            <input 
-              type="email" 
-              placeholder="Ingresa tu correo" 
-              className="w-full bg-white text-black px-4 py-3 text-sm outline-none placeholder-gray-500 border-none"
-            />
-            {/* Botón con el Gris #151515 */}
-            <button className="w-full bg-[#151515] border border-white text-white px-4 py-3 font-bold hover:bg-white hover:text-[#151515] transition-colors uppercase text-xs tracking-widest">
-              SUSCRIBIRSE
-            </button>
-          </div>
         </div>
 
       </div>
