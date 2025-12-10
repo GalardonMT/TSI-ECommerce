@@ -2,33 +2,33 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { addCartItem } from "@/app/api/cart/addItem";
-// import { productsData } from "@/data/products"; // <--- YA NO USAMOS ESTO
 
-// Definimos el tipo de datos que esperamos usar en tu diseño
 type ProductDetail = {
   id: number;
   title: string;
   description: string;
-  price: string; // Lo guardaremos como string formateado ($15.000)
+  price: string;
   imageSrc: string;
   imageAlt: string;
   details: string;
   stock: number;
-  gallery: string[]; // Para las miniaturas
+  gallery: string[];
 };
 
 export default function ProductDetailPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const router = useRouter();
 
-  // ESTADOS
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [buying, setBuying] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"description" | "shipping">("description");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -37,8 +37,12 @@ export default function ProductDetailPage() {
     try {
       const resp = await addCartItem(product.id, 1);
       if (!resp.ok) {
-        const detail = resp.data?.detail || "No se pudo agregar al carrito";
-        setAddError(detail);
+        if (resp.status === 401) {
+          setAddError("Debes iniciar sesión para comprar.");
+        } else {
+          const detail = resp.data?.detail || "No se pudo agregar al carrito";
+          setAddError(detail);
+        }
       } else {
         setProduct((prev) => (prev ? { ...prev, stock: Math.max(0, prev.stock - 1) } : prev));
       }
@@ -46,6 +50,29 @@ export default function ProductDetailPage() {
       setAddError("Error de conexión al agregar al carrito");
     } finally {
       setAdding(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!product) return;
+    setAddError(null);
+    setBuying(true);
+    try {
+      const resp = await addCartItem(product.id, 1);
+      if (!resp.ok) {
+        if (resp.status === 401) {
+          setAddError("Debes iniciar sesión para comprar.");
+        } else {
+          const detail = resp.data?.detail || "No se pudo agregar al carrito";
+          setAddError(detail);
+        }
+        return;
+      }
+      router.push("/cart");
+    } catch (err) {
+      setAddError("Error de conexión al agregar al carrito");
+    } finally {
+      setBuying(false);
     }
   };
 
@@ -61,38 +88,42 @@ export default function ProductDetailPage() {
         
         const data = await res.json();
 
-        // 1. Procesar Imágenes (Principal y Galería)
         let processedImages: string[] = [];
         
         if (data.imagenes && data.imagenes.length > 0) {
           processedImages = data.imagenes.map((img: any) => {
-             const ruta = img.image;
-             return ruta.startsWith('http') 
-               ? ruta 
-               : `http://127.0.0.1:8000${ruta.startsWith('/') ? '' : '/'}${ruta}`;
+             const ruta = img.image || "";
+            
+             if (ruta.startsWith('http') || ruta.startsWith('data:')) {
+               return ruta;
+             } 
+             else if (ruta.length > 300) {
+               return `data:image/jpeg;base64,${ruta}`;
+             }
+             return `http://127.0.0.1:8000${ruta.startsWith('/') ? '' : '/'}${ruta}`;
           });
         } else {
-          processedImages = ["https://via.placeholder.com/600"]; // Placeholder si no hay fotos
+          processedImages = ["/placeholder.png"]; 
         }
 
-        // 2. Formatear Precio (Django manda número, tu diseño espera texto bonito)
         const precioFormateado = new Intl.NumberFormat('es-CL', { 
             style: 'currency', 
             currency: 'CLP' 
         }).format(data.precio);
 
-        // 3. Mapear datos de Django a TU estructura
         setProduct({
             id: data.id_producto,
             title: data.nombre,
             description: data.descripcion || "Sin descripción corta.",
             price: precioFormateado,
-            imageSrc: processedImages[0], // La primera es la principal
+            imageSrc: processedImages[0], 
             imageAlt: data.nombre,
-            details: data.descripcion || "No hay detalles adicionales.", // Usamos la misma descripción para 'details'
+            details: data.descripcion || "No hay detalles adicionales.",
             stock: data.stock_disponible,
-            gallery: processedImages // Guardamos todas para las miniaturas
+            gallery: processedImages 
         });
+        
+        setSelectedImage(processedImages[0]);
 
       } catch (error) {
         console.error(error);
@@ -105,20 +136,20 @@ export default function ProductDetailPage() {
     fetchProduct();
   }, [id]);
 
-  // ESTADO DE CARGA (Para que no se rompa mientras busca)
   if (loading) {
     return <div className="text-center py-20">Cargando producto...</div>;
   }
 
-  // SI NO EXISTE
   if (!product) {
     return <div className="text-center py-20">Producto no encontrado</div>;
   }
 
+  // Usamos la imagen seleccionada o la principal si falla algo
+  const currentImage = selectedImage || product.imageSrc;
+
   return (
     <div className="container mx-auto py-12 px-4 md:px-8">
       
-      {/* --- SECCIÓN SUPERIOR --- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
         
         {/* COLUMNA IZQUIERDA */}
@@ -126,27 +157,29 @@ export default function ProductDetailPage() {
           
           {/* 1. IMAGEN PRINCIPAL */}
           <div className="relative w-full aspect-square bg-gray-200 overflow-hidden flex items-center justify-center">
-            {product.imageSrc ? (
+            {currentImage ? (
               <Image
-                src={product.imageSrc}
+                src={currentImage}
                 alt={product.imageAlt}
                 fill
                 className="object-cover object-center" 
                 priority
-                unoptimized={true} // Agregado para permitir imagenes externas/django
+                unoptimized={true} 
               />
             ) : (
               <span className="text-gray-400 text-sm">Sin imagen disponible</span>
             )}
           </div>
           
-          {/* 2. MINIATURAS (Ahora dinámicas según las fotos que tenga el producto) */}
+          {/* 2. MINIATURAS */}
           <div className="grid grid-cols-4 gap-4 w-full">
             {product.gallery.map((imgUrl, index) => (
               <button 
                 key={index} 
-                className="relative aspect-square bg-gray-200 overflow-hidden border-2 border-transparent hover:border-black transition-all flex items-center justify-center"
-                // Aquí podrías agregar un onClick para cambiar la imagen principal si quisieras
+                onClick={() => setSelectedImage(imgUrl)} // Hacemos clicable la miniatura
+                className={`relative aspect-square bg-gray-200 overflow-hidden border-2 transition-all flex items-center justify-center ${
+                    selectedImage === imgUrl ? "border-black" : "border-transparent hover:border-black"
+                }`}
               >
                  <Image
                     src={imgUrl}
@@ -185,11 +218,14 @@ export default function ProductDetailPage() {
             >
               {adding ? "Agregando..." : product.stock <= 0 ? "Sin stock" : "Agregar al carro"}
             </button>
-            <button className="w-full py-3 px-6 bg-black text-white rounded-md font-medium hover:bg-gray-800 transition-colors shadow-sm">
-              Comprar ahora
+            <button
+              disabled={buying || product.stock <= 0}
+              onClick={handleBuyNow}
+              className="w-full py-3 px-6 bg-black text-white rounded-md font-medium hover:bg-gray-800 transition-colors shadow-sm disabled:opacity-60"
+            >
+              {buying ? "Procesando..." : "Comprar ahora"}
             </button>
           </div>
-          {/* Mostramos el stock real de Django */}
           <p className="mt-4 text-sm text-gray-500">Stock disponible: {product.stock}</p>
         </div>
       </div>
@@ -197,7 +233,6 @@ export default function ProductDetailPage() {
       {/* --- SECCIÓN INFERIOR - TABS --- */}
       <div className="mt-12">
         
-        {/* Encabezados de los Tabs */}
         <div className="flex border-b border-gray-200 mb-8">
           <button
             onClick={() => setActiveTab("description")}
@@ -221,10 +256,8 @@ export default function ProductDetailPage() {
           </button>
         </div>
 
-        {/* Contenido de los Tabs */}
         <div className="min-h-[100px]">
           
-          {/* Contenido - Descripción */}
           {activeTab === "description" && (
             <div className="prose prose-gray max-w-none">
               <p className="text-gray-600 text-base leading-relaxed">
@@ -237,7 +270,6 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {/* Contenido - Envíos */}
           {activeTab === "shipping" && (
             <div className="text-gray-600 text-base">
               <p>Por definir</p>

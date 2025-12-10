@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { getDisplayEmail, userIsEmpleado } from "../../../app/api/auth/login/headerUtils";
 import { clearTokens } from "../../../app/api/auth/login/tokenStorage";
+import { ResetPasswordModal } from "./ResetPasswordModal";
 
 type HeaderAuthMenuProps = {
   user: any | null;
@@ -19,6 +20,8 @@ export default function HeaderAuthMenu({ user, onUserChange, pathname }: HeaderA
   const [password, setPassword] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -215,13 +218,27 @@ export default function HeaderAuthMenu({ user, onUserChange, pathname }: HeaderA
                     Crear cuenta
                   </Link>
                 </div>
-                <button type="button" className="w-full text-xs text-left text-blue-600 hover:underline">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowResetModal(true);
+                    setResetEmail(email);
+                  }}
+                  className="w-full text-xs text-left text-blue-600 hover:underline"
+                >
                   ¿Olvidaste tu contraseña?
                 </button>
               </>
             )}
           </form>
         </div>
+      )}
+
+      {showResetModal && (
+        <ResetPasswordModal
+          initialEmail={resetEmail}
+          onClose={() => setShowResetModal(false)}
+        />
       )}
     </div>
   );

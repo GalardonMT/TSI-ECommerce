@@ -4,7 +4,8 @@ import { applyRefreshedAccessCookie, backendUrl } from "@/lib/auth/serverTokens"
 
 const BACKEND = backendUrl();
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const staffUser = await requireStaff(request.headers);
   if (!staffUser) {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
@@ -18,7 +19,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  const backendResponse = await fetch(`${BACKEND}/api/inventario/categoria/${params.id}/`, {
+  const backendResponse = await fetch(`${BACKEND}/api/inventario/categoria/${id}/`, {
     method: "DELETE",
     headers,
   });
@@ -42,10 +43,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     return errorResponse;
   }
 
-  const successResponse = NextResponse.json(
-    parsedBody || { ok: true },
-    { status: backendResponse.status }
-  );
+  const successResponse = backendResponse.status === 204
+    ? new NextResponse(null, { status: 204 })
+    : NextResponse.json(parsedBody || { ok: true }, { status: backendResponse.status });
   applyRefreshedAccessCookie(successResponse, refreshedToken);
   return successResponse;
 }

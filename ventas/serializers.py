@@ -4,7 +4,7 @@ from inventario.models import Producto
 
 class DetalleReservaSerializer(serializers.ModelSerializer):
     nombre_producto = serializers.CharField(source="producto.nombre", read_only=True)
-    imagen = serializers.CharField(source="producto.imagen", read_only=True)  # si agregas campo imagen
+    imagen = serializers.SerializerMethodField()
     stock_disponible = serializers.IntegerField(source="producto.stock_disponible", read_only=True)
 
     class Meta:
@@ -18,6 +18,14 @@ class DetalleReservaSerializer(serializers.ModelSerializer):
             'imagen',
             'stock_disponible',
         ]
+
+    def get_imagen(self, obj):
+        """Return the first associated product image (text/URL) if present."""
+        producto = getattr(obj, "producto", None)
+        if not producto:
+            return None
+        imagen = producto.imagenes.first() if hasattr(producto, "imagenes") else None
+        return getattr(imagen, "image", None)
 
 
 class ReservaSerializer(serializers.ModelSerializer):

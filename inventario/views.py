@@ -1,4 +1,6 @@
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, viewsets, status
+from rest_framework.response import Response
+from django.db.models.deletion import ProtectedError
 
 from .models import Categoria, Producto
 from .serializers import CategoriaSerializer, ProductoSerializer
@@ -20,9 +22,6 @@ class ProductoViewSet(viewsets.ModelViewSet):
     serializer_class = ProductoSerializer
 
     def get_queryset(self):
-        """
-        Sobrescribimos esto para permitir filtrar por destacados
-        """
         queryset = Producto.objects.all()
         destacado = self.request.query_params.get('destacado')
         
@@ -39,6 +38,20 @@ class ProductoViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = [permissions.AllowAny]
         return [perm() for perm in permission_classes]
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            self.perform_destroy(instance)
+        except ProtectedError:
+            return Response(
+                {
+                    "detail": "No se puede eliminar el producto porque tiene reservas asociadas.",
+                    "code": "product_has_reservations",
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CategoriaViewSet(viewsets.ModelViewSet):
