@@ -22,9 +22,6 @@ class ProductoViewSet(viewsets.ModelViewSet):
     serializer_class = ProductoSerializer
 
     def get_queryset(self):
-        """
-        Sobrescribimos esto para permitir filtrar por destacados
-        """
         queryset = Producto.objects.all()
         destacado = self.request.query_params.get('destacado')
         
